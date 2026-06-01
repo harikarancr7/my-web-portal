@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>1200+ Unique MIME Subject + From Encoder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{  --bg:#06070b;  --panel:#11141b;  --panel2:#181c26;  --border:#272d3c;  --accent:#7b61ff;  --text:#f4f6ff;  --muted:#8f97b4;  --green:#29d39f;}*{  margin:0;  padding:0;  box-sizing:border-box;}body{  background:var(--bg);  color:var(--text);  font-family:Inter,sans-serif;}.wrap{  max-width:1900px;  margin:auto;  padding:24px;}.header{  margin-bottom:24px;}.title{  font-size:42px;  font-weight:800;  margin-bottom:8px;}.desc{  color:var(--muted);  font-size:14px;  line-height:1.7;}.layout{  display:grid;  grid-template-columns:340px 1fr;  gap:24px;}.sidebar{  background:var(--panel);  border:1px solid var(--border);  border-radius:24px;  padding:22px;  height:calc(100vh - 80px);  overflow:auto;  position:sticky;  top:24px;}.label{  color:var(--muted);  font-size:12px;  margin-bottom:10px;  font-weight:700;}textarea{  width:100%;  min-height:180px;  resize:vertical;  background:var(--panel2);  border:1px solid var(--border);  border-radius:16px;  padding:14px;  color:white;  outline:none;  font-family:"JetBrains Mono",monospace;  font-size:12px;  line-height:1.7;  margin-bottom:20px;}textarea:focus{  border-color:var(--accent);}.btn{  width:100%;  border:none;  background:var(--accent);  color:white;  font-weight:800;  font-size:15px;  border-radius:16px;  padding:16px;  cursor:pointer;}.btn:hover{  opacity:.92;}.stats{  margin-top:18px;  display:grid;  grid-template-columns:1fr 1fr;  gap:12px;}.stat{  background:var(--panel2);  border:1px solid var(--border);  border-radius:14px;  padding:14px;}.num{  font-size:24px;  font-weight:800;}.txt{  color:var(--muted);  font-size:11px;  margin-top:4px;}.main{  display:flex;  flex-direction:column;  gap:18px;}.toolbar{  background:var(--panel);  border:1px solid var(--border);  border-radius:20px;  padding:16px;  display:flex;  gap:14px;  align-items:center;}.search{  flex:1;  height:50px;  border-radius:14px;  border:1px solid var(--border);  background:var(--panel2);  color:white;  padding:0 16px;  outline:none;  font-family:"JetBrains Mono",monospace;}.copyall{  width:auto;  padding:0 24px;  height:50px;}.grid{  display:grid;  grid-template-columns:repeat(auto-fill,minmax(800px,1fr));  gap:18px;}.card{  background:var(--panel);  border:1px solid var(--border);  border-radius:20px;  overflow:hidden;}.head{  background:var(--panel2);  border-bottom:1px solid var(--border);  padding:14px 18px;  display:flex;  justify-content:space-between;  align-items:center;}.badge{  color:#b7a9ff;  font-size:11px;  font-family:"JetBrains Mono",monospace;}.copy{  background:transparent;  border:1px solid var(--border);  color:white;  width:auto;  padding:8px 12px;  border-radius:10px;  cursor:pointer;  font-size:11px;}.body{  padding:18px;}.row{  display:grid;  grid-template-columns:1fr 1fr;  gap:18px;}.block{  background:#090b10;  border:1px solid var(--border);  border-radius:14px;  padding:14px;}.small{  color:var(--muted);  font-size:11px;  margin-bottom:8px;  text-transform:uppercase;  letter-spacing:.08em;}.code{  font-family:"JetBrains Mono",monospace;  font-size:11px;  line-height:1.8;  word-break:break-all;}.toast{  position:fixed;  right:20px;  bottom:20px;  background:var(--green);  color:black;  padding:14px 18px;  border-radius:12px;  font-weight:800;  opacity:0;  transform:translateY(30px);  transition:.3s;}.toast.show{  opacity:1;  transform:translateY(0);}@media(max-width:1200px){  .layout{    grid-template-columns:1fr;  }  .sidebar{    position:relative;    height:auto;  }  .grid{    grid-template-columns:1fr;  }  .row{    grid-template-columns:1fr;  }}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="title">1200+ Unique MIME Encoder</div>
+    <div class="desc">Generate unique RFC2047 Subject and From encodings with real MIME encoded-word techniques.</div>
+  </div>
+  <div class="layout">
+    <div class="sidebar">
+      <div class="label">SUBJECTS</div>
+      <textarea id="subjects">Amazon's Just Extended These Memorial Day Deals
+Important Account Notification
+Live Amazon Incredible Spring Deals</textarea>
+      <div class="label">FROM NAMES</div>
+      <textarea id="froms">Deals watchdogs
+Amazon Rewards
+Prime Alerts</textarea>
+      <button class="btn" onclick="generateAll()">Generate 1200+ Encodings</button>
+      <div class="stats">
+        <div class="stat"><div class="num" id="count">0</div><div class="txt">UNIQUE PAIRS</div></div>
+        <div class="stat"><div class="num">1200+</div><div class="txt">ENCODING METHODS</div></div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="toolbar">
+        <input class="search" id="search" placeholder="Search subject or from..." oninput="render()"/>
+        <button class="btn copyall" onclick="copyAll()">Copy All</button>
+      </div>
+      <div id="grid" class="grid"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">Copied</div>
+
+<script>
+const charsets = ['UTF-8','ISO-8859-1','WINDOWS-1252','UTF-16','UTF-16BE','UTF-16LE','US-ASCII','SHIFT_JIS','GBK','BIG5'];
+const methods = ['B','Q','HEXQ'];
+const spacings = [' ','  ','   '];
+const folds = [30,40,50,60,70];
+const wordModes = ['normal','split','pair','triple'];
+
+let allResults = [];
+
+// Dynamic Multi-Charset Byte Encoder
+function getCharsetBytes(str, charset) {
+  const upperCS = charset.toUpperCase();
+  
+  // Natively handle UTF-8 and US-ASCII
+  if (upperCS === 'UTF-8' || upperCS === 'US-ASCII') {
+    return Array.from(new TextEncoder().encode(str));
+  }
+  
+  // Handle UTF-16 Variations
+  if (upperCS.startsWith('UTF-16')) {
+    let bytes = [];
+    for (let i = 0; i < str.length; i++) {
+      let code = str.charCodeAt(i);
+      let b1 = (code >> 8) & 0xFF;
+      let b2 = code & 0xFF;
+      if (upperCS === 'UTF-16LE') {
+        bytes.push(b2, b1);
+      } else {
+        bytes.push(b1, b2); // Default Big-Endian
+      }
+    }
+    return bytes;
+  }
+  
+  // Custom Fallback Encoder for Legacy 8-bit and DBCS Charsets
+  let bytes = [];
+  for (let i = 0; i < str.length; i++) {
+    let code = str.charCodeAt(i);
+    if (code <= 0x7F) {
+      bytes.push(code);
+    } else if (upperCS === 'ISO-8859-1' || upperCS === 'WINDOWS-1252') {
+      bytes.push(code & 0xFF);
+    } else {
+      // Basic split fallback for high-byte double characters (GBK, Big5, Shift_JIS)
+      bytes.push((code >> 8) & 0xFF, code & 0xFF);
+    }
+  }
+  return bytes.filter(b => b !== 0 || upperCS.startsWith('UTF-16'));
+}
+
+function hexQP(str, charset){
+  let out = '';
+  getCharsetBytes(str, charset).forEach(b=>{
+    out += '=' + b.toString(16).toUpperCase().padStart(2,'0');
+  });
+  return out;
+}
+
+function b64(str, charset){
+  let bin = '';
+  getCharsetBytes(str, charset).forEach(b=>{
+    bin += String.fromCharCode(b);
+  });
+  return btoa(bin);
+}
+
+function qp(str, charset){
+  let out = '';
+  getCharsetBytes(str, charset).forEach(b=>{
+    if (b === 32) {
+      out += '_'; // Required by RFC 2047: structural space inside Q must be an underscore
+    } else if(b >= 33 && b <= 126 && b !== 61 && b !== 95){
+      out += String.fromCharCode(b);
+    } else {
+      out += '=' + b.toString(16).toUpperCase().padStart(2,'0');
+    }
+  });
+  return out;
+}
+
+function foldMIME(chunks, maxLineSize) {
+  let lines = [];
+  let currentLine = "";
+
+  for (let i = 0; i < chunks.length; i++) {
+    let token = chunks[i];
+    if (currentLine === "") {
+      currentLine = token;
+    } else {
+      if ((currentLine + " " + token).length > maxLineSize) {
+        lines.push(currentLine);
+        currentLine = token;
+      } else {
+        currentLine += " " + token;
+      }
+    }
+  }
+  if (currentLine !== "") {
+    lines.push(currentLine);
+  }
+  return lines.join('\r\n');
+}
+
+function buildAdvanced(text, charset, method, spacing, foldSize, wordMode){
+  const rawWords = text.split(' ');
+  if (rawWords.length === 0 || text === '') return '';
+
+  let groupings = [];
+
+  if(wordMode === 'normal'){
+    groupings = [rawWords.join(' ')];
+  } else if(wordMode === 'split'){
+    groupings = rawWords;
+  } else if(wordMode === 'pair'){
+    for (let i = 0; i < rawWords.length; i += 2) {
+      groupings.push(rawWords.slice(i, i + 2).join(' '));
+    }
+  } else if(wordMode === 'triple'){
+    for (let i = 0; i < rawWords.length; i += 3) {
+      groupings.push(rawWords.slice(i, i + 3).join(' '));
+    }
+  }
+
+  const encodedChunks = groupings.map((chunk, idx) => {
+    let chunkPayload = chunk;
+    
+    // Inject custom spacing layout into the string before running encoding processes
+    if (idx < groupings.length - 1) {
+      chunkPayload += spacing;
+    }
+
+    if(chunkPayload === '') return '';
+
+    if(method === 'B'){
+      return `=?${charset}?B?${b64(chunkPayload, charset)}?=`;
+    }
+    if(method === 'Q'){
+      return `=?${charset}?Q?${qp(chunkPayload, charset)}?=`;
+    }
+    if(method === 'HEXQ'){
+      return `=?${charset}?Q?${hexQP(chunkPayload, charset)}?=`;
+    }
+    return '';
+  }).filter(Boolean);
+
+  return foldMIME(encodedChunks, foldSize);
+}
+
+function generateAll(){
+  allResults = [];
+  const unique = new Set();
+  const subjects = document.getElementById('subjects').value.split('\n').map(v=>v.trim()).filter(Boolean);
+  const froms = document.getElementById('froms').value.split('\n').map(v=>v.trim()).filter(Boolean);
+  
+  subjects.forEach(subject=>{
+    froms.forEach(from=>{
+      charsets.forEach(charset=>{
+        methods.forEach(method=>{
+          spacings.forEach(spaceMode=>{
+            folds.forEach(foldSize=>{
+              wordModes.forEach(wordMode=>{
+                const subEncoded = buildAdvanced(subject, charset, method, spaceMode, foldSize, wordMode);
+                const fromEncoded = buildAdvanced(from, charset, method, spaceMode, foldSize, wordMode);
+                const key = subEncoded + fromEncoded;
+                if(!unique.has(key)){
+                  unique.add(key);
+                  allResults.push({
+                    subject,
+                    from,
+                    charset,
+                    method,
+                    subEncoded,
+                    fromEncoded
+                  });
+                }
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+  document.getElementById('count').innerText = allResults.length;
+  render();
+}
+
+function render(){
+  const q = document.getElementById('search').value.toLowerCase();
+  const filtered = allResults.filter(r=>
+    r.subject.toLowerCase().includes(q)  ||
+    r.from.toLowerCase().includes(q)     ||
+    r.subEncoded.toLowerCase().includes(q) ||
+    r.fromEncoded.toLowerCase().includes(q)
+  );
+  
+  document.getElementById('grid').innerHTML = filtered.map((r,i)=>`
+    <div class="card">
+      <div class="head">
+        <div class="badge">${r.charset} / ${r.method}</div>
+        <button class="copy" onclick="copyPair(\`${escapeBackticks(r.subEncoded)}\`,\`${escapeBackticks(r.fromEncoded)}\`)">Copy Pair</button>
+      </div>
+      <div class="body">
+        <div class="row">
+          <div class="block">
+            <div class="small">SUBJECT</div>
+            <div class="code">${escapeHtml(r.subEncoded)}</div>
+          </div>
+          <div class="block">
+            <div class="small">FROM</div>
+            <div class="code">${escapeHtml(r.fromEncoded)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function copyPair(subject,from){
+  navigator.clipboard.writeText(`Subject: ${subject}\nFrom: ${from}`);
+  showToast();
+}
+
+function copyAll(){
+  navigator.clipboard.writeText(
+    allResults.map(r=>`Subject: ${r.subEncoded}\nFrom: ${r.fromEncoded}`).join('\n\n')
+  );
+  showToast();
+}
+
+function showToast(){
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>{ t.classList.remove('show'); },1800);
+}
+
+function escapeHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function escapeBackticks(str){
+  return str.replace(/`/g,'\\`');
+}
+
+generateAll();
+</script>
+</body>
+</html>
