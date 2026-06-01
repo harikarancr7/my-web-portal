@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Subject Encoder</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131c;
+    --surface2: #1c1c2a;
+    --border: rgba(120,110,255,0.18);
+    --border2: rgba(120,110,255,0.35);
+    --accent: #786eff;
+    --accent2: #b8b3ff;
+    --text: #e8e6ff;
+    --text2: #9d98cc;
+    --text3: #5f5a8c;
+    --green: #3ddc97;
+    --red: #ff6b6b;
+    --yellow: #ffd166;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(120,110,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120,110,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+  .glow {
+    position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse, rgba(120,110,255,0.12) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  .wrap { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+  header { text-align: center; margin-bottom: 3rem; }
+  .badge {
+    display: inline-block;
+    background: rgba(120,110,255,0.12);
+    border: 1px solid var(--border2);
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    padding: 4px 14px;
+    border-radius: 100px;
+    margin-bottom: 1.2rem;
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 30%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.6rem;
+  }
+  .subtitle { color: var(--text2); font-size: 1rem; font-weight: 400; }
+
+  .input-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.2rem; }
+  @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+  label {
+    display: block;
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  input[type="text"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--text3); }
+
+  .controls { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .btn-encode {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 12px 28px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-encode:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-encode:active { transform: scale(0.97); }
+
+  .filter-wrap { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+  .filter-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent2);
+    background: rgba(120,110,255,0.1);
+  }
+
+  .stats-bar {
+    display: flex; gap: 1.5rem; align-items: center;
+    padding: 0 0 1rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .stat { font-family: var(--mono); font-size: 12px; color: var(--text3); }
+  .stat span { color: var(--accent2); font-weight: 600; }
+
+  .search-box {
+    margin-left: auto;
+    position: relative;
+  }
+  .search-box input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 7px 14px 7px 34px;
+    outline: none;
+    width: 200px;
+  }
+  .search-box::before {
+    content: '⌕';
+    position: absolute;
+    left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 16px;
+    pointer-events: none;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+    gap: 1rem;
+  }
+  @media (max-width: 640px) { .results-grid { grid-template-columns: 1fr; } }
+
+  .enc-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .enc-card:hover { border-color: var(--border2); }
+  .enc-card.copied { border-color: var(--green); }
+
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    gap: 8px;
+  }
+  .card-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent2);
+    letter-spacing: 0.06em;
+    flex: 1;
+    min-width: 0;
+  }
+  .category-pill {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    background: rgba(120,110,255,0.1);
+    color: var(--text3);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--border2); }
+  .copy-btn.ok { color: var(--green); border-color: var(--green); }
+
+  .card-body {
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    word-break: break-all;
+    line-height: 1.7;
+    min-height: 48px;
+    position: relative;
+  }
+  .card-body.empty { color: var(--text3); font-style: italic; font-size: 12px; }
+
+  .placeholder-msg {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .placeholder-msg strong { display: block; font-size: 24px; margin-bottom: 8px; color: var(--text2); }
+
+  .toast {
+    position: fixed;
+    bottom: 2rem; right: 2rem;
+    background: var(--surface);
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    z-index: 100;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.25s ease;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  .copy-all-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 0;
+    flex-wrap: wrap; gap: 8px;
+  }
+  .btn-copy-all {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-copy-all:hover { background: rgba(120,110,255,0.12); }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="glow"></div>
+<div class="wrap">
+  <header>
+    <div class="badge">RFC 2047 · MIME Encoded-Word</div>
+    <h1>Email Subject Encoder</h1>
+    <p class="subtitle">40+ encoding formats · One click copy · RFC compliant output</p>
+  </header>
+
+  <div class="input-panel">
+    <div class="row">
+      <div>
+        <label>From (Display Name)</label>
+        <input type="text" id="fromField" placeholder='e.g. "John Doe" &lt;john@example.com&gt;' value="John Doe">
+      </div>
+      <div>
+        <label>Subject Text</label>
+        <input type="text" id="subjectField" placeholder="Enter your email subject..." value="Hello! Special characters: é à ü ñ">
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn-encode" onclick="encodeAll()">⚡ Encode All</button>
+      <div class="filter-wrap">
+        <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+        <button class="filter-btn" onclick="setFilter('utf-8', this)">UTF-8</button>
+        <button class="filter-btn" onclick="setFilter('utf-7', this)">UTF-7</button>
+        <button class="filter-btn" onclick="setFilter('iso', this)">ISO</button>
+        <button class="filter-btn" onclick="setFilter('windows', this)">Windows</button>
+        <button class="filter-btn" onclick="setFilter('ascii', this)">ASCII</button>
+        <button class="filter-btn" onclick="setFilter('other', this)">Other</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultsArea" class="placeholder-msg">
+    <strong>↑</strong>Enter a subject and click Encode All
+  </div>
+
+  <div class="toast" id="toast">✓ Copied to clipboard</div>
+</div>
+
+<script>
+const encodings = [
+  // UTF-8 family
+  { id:'utf8-b64',   label:'UTF-8 / Base64',          charset:'utf-8',           method:'B', cat:'utf-8' },
+  { id:'utf8-qp',    label:'UTF-8 / Quoted-Printable', charset:'utf-8',           method:'Q', cat:'utf-8' },
+  { id:'utf8-raw',   label:'UTF-8 Raw (no encoding)',   charset:'utf-8',           method:'RAW', cat:'utf-8' },
+
+  // UTF-7 family
+  { id:'utf7-b64',   label:'UTF-7 / Base64',           charset:'utf-7',           method:'B', cat:'utf-7' },
+  { id:'utf7-qp',    label:'UTF-7 / Quoted-Printable', charset:'utf-7',           method:'Q', cat:'utf-7' },
+
+  // UTF-16
+  { id:'utf16be-b64',label:'UTF-16BE / Base64',        charset:'utf-16be',        method:'B', cat:'other' },
+  { id:'utf16le-b64',label:'UTF-16LE / Base64',        charset:'utf-16le',        method:'B', cat:'other' },
+
+  // UTF-32
+  { id:'utf32-b64',  label:'UTF-32 / Base64',          charset:'utf-32',          method:'B', cat:'other' },
+
+  // ISO-8859 family
+  { id:'iso88591-b', label:'ISO-8859-1 / Base64',      charset:'iso-8859-1',      method:'B', cat:'iso' },
+  { id:'iso88591-q', label:'ISO-8859-1 / QP',          charset:'iso-8859-1',      method:'Q', cat:'iso' },
+  { id:'iso88592-b', label:'ISO-8859-2 / Base64',      charset:'iso-8859-2',      method:'B', cat:'iso' },
+  { id:'iso88592-q', label:'ISO-8859-2 / QP',          charset:'iso-8859-2',      method:'Q', cat:'iso' },
+  { id:'iso88593-b', label:'ISO-8859-3 / Base64',      charset:'iso-8859-3',      method:'B', cat:'iso' },
+  { id:'iso88594-b', label:'ISO-8859-4 / Base64',      charset:'iso-8859-4',      method:'B', cat:'iso' },
+  { id:'iso88595-b', label:'ISO-8859-5 / Base64',      charset:'iso-8859-5',      method:'B', cat:'iso' },
+  { id:'iso88596-b', label:'ISO-8859-6 / Base64',      charset:'iso-8859-6',      method:'B', cat:'iso' },
+  { id:'iso88597-b', label:'ISO-8859-7 / Base64',      charset:'iso-8859-7',      method:'B', cat:'iso' },
+  { id:'iso88598-b', label:'ISO-8859-8 / Base64',      charset:'iso-8859-8',      method:'B', cat:'iso' },
+  { id:'iso88599-b', label:'ISO-8859-9 / Base64',      charset:'iso-8859-9',      method:'B', cat:'iso' },
+  { id:'iso885910-b',label:'ISO-8859-10 / Base64',     charset:'iso-8859-10',     method:'B', cat:'iso' },
+  { id:'iso885913-b',label:'ISO-8859-13 / Base64',     charset:'iso-8859-13',     method:'B', cat:'iso' },
+  { id:'iso885914-b',label:'ISO-8859-14 / Base64',     charset:'iso-8859-14',     method:'B', cat:'iso' },
+  { id:'iso885915-b',label:'ISO-8859-15 / Base64',     charset:'iso-8859-15',     method:'B', cat:'iso' },
+  { id:'iso885916-b',label:'ISO-8859-16 / Base64',     charset:'iso-8859-16',     method:'B', cat:'iso' },
+  { id:'iso2022jp-b',label:'ISO-2022-JP / Base64',     charset:'iso-2022-jp',     method:'B', cat:'iso' },
+
+  // Windows codepages
+  { id:'cp1250-b',   label:'Windows-1250 / Base64',    charset:'windows-1250',    method:'B', cat:'windows' },
+  { id:'cp1250-q',   label:'Windows-1250 / QP',        charset:'windows-1250',    method:'Q', cat:'windows' },
+  { id:'cp1251-b',   label:'Windows-1251 / Base64',    charset:'windows-1251',    method:'B', cat:'windows' },
+  { id:'cp1251-q',   label:'Windows-1251 / QP',        charset:'windows-1251',    method:'Q', cat:'windows' },
+  { id:'cp1252-b',   label:'Windows-1252 / Base64',    charset:'windows-1252',    method:'B', cat:'windows' },
+  { id:'cp1252-q',   label:'Windows-1252 / QP',        charset:'windows-1252',    method:'Q', cat:'windows' },
+  { id:'cp1253-b',   label:'Windows-1253 / Base64',    charset:'windows-1253',    method:'B', cat:'windows' },
+  { id:'cp1254-b',   label:'Windows-1254 / Base64',    charset:'windows-1254',    method:'B', cat:'windows' },
+  { id:'cp1255-b',   label:'Windows-1255 / Base64',    charset:'windows-1255',    method:'B', cat:'windows' },
+  { id:'cp1256-b',   label:'Windows-1256 / Base64',    charset:'windows-1256',    method:'B', cat:'windows' },
+  { id:'cp1257-b',   label:'Windows-1257 / Base64',    charset:'windows-1257',    method:'B', cat:'windows' },
+  { id:'cp1258-b',   label:'Windows-1258 / Base64',    charset:'windows-1258',    method:'B', cat:'windows' },
+
+  // Asian
+  { id:'gbk-b',      label:'GBK (GB2312) / Base64',    charset:'gbk',             method:'B', cat:'other' },
+  { id:'big5-b',     label:'Big5 / Base64',             charset:'big5',            method:'B', cat:'other' },
+  { id:'shiftjis-b', label:'Shift_JIS / Base64',        charset:'shift_jis',       method:'B', cat:'other' },
+  { id:'eucjp-b',    label:'EUC-JP / Base64',           charset:'euc-jp',          method:'B', cat:'other' },
+  { id:'euckr-b',    label:'EUC-KR / Base64',           charset:'euc-kr',          method:'B', cat:'other' },
+  { id:'koi8r-b',    label:'KOI8-R / Base64',           charset:'koi8-r',          method:'B', cat:'other' },
+  { id:'koi8u-b',    label:'KOI8-U / Base64',           charset:'koi8-u',          method:'B', cat:'other' },
+
+  // ASCII variants
+  { id:'us-ascii-b', label:'US-ASCII / Base64',         charset:'us-ascii',        method:'B', cat:'ascii' },
+  { id:'us-ascii-q', label:'US-ASCII / QP',             charset:'us-ascii',        method:'Q', cat:'ascii' },
+  { id:'ascii-raw',  label:'ASCII Plain (no encoding)', charset:'us-ascii',        method:'RAW', cat:'ascii' },
+
+  // Special formats
+  { id:'utf8-hex',   label:'UTF-8 / Hex Escape (=XX)', charset:'utf-8',           method:'HEX', cat:'utf-8' },
+  { id:'utf8-url',   label:'UTF-8 / URL Percent-Enc',  charset:'utf-8',           method:'URL', cat:'utf-8' },
+  { id:'utf8-html',  label:'UTF-8 / HTML Entity',      charset:'utf-8',           method:'HTML', cat:'utf-8' },
+  { id:'utf8-xml',   label:'UTF-8 / XML Numeric Ref',  charset:'utf-8',           method:'XML', cat:'utf-8' },
+  { id:'punycode',   label:'Punycode (IDN-style)',      charset:'utf-8',           method:'PUNY', cat:'other' },
+];
+
+let currentFilter = 'all';
+let encoded = [];
+
+function toBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+
+function toQP(str) {
+  const bytes = new TextEncoder().encode(str);
+  let out = '';
+  for (const b of bytes) {
+    if ((b >= 33 && b <= 126 && b !== 61 && b !== 95 && b !== 63) || b === 32) {
+      out += b === 32 ? '_' : String.fromCharCode(b);
+    } else {
+      out += '=' + b.toString(16).toUpperCase().padStart(2, '0');
+    }
+  }
+  return out;
+}
+
+function toHexEscape(str) {
+  const bytes = new TextEncoder().encode(str);
+  return Array.from(bytes).map(b => '=' + b.toString(16).toUpperCase().padStart(2,'0')).join('');
+}
+
+function toURLEnc(str) {
+  return encodeURIComponent(str);
+}
+
+function toHTMLEntities(str) {
+  return [...str].map(c => {
+    const cp = c.codePointAt(0);
+    return cp > 127 ? `&#${cp};` : c;
+  }).join('');
+}
+
+function toXMLNumRef(str) {
+  return [...str].map(c => {
+    const cp = c.codePointAt(0);
+    return cp > 127 ? `&#x${cp.toString(16).toUpperCase()};` : c;
+  }).join('');
+}
+
+function toPunycode(str) {
+  try {
+    // Simple stub: show codepoints for non-ASCII
+    return [...str].map(c => {
+      const cp = c.codePointAt(0);
+      return cp > 127 ? `xn--${cp.toString(16)}` : c;
+    }).join('');
+  } catch(e) { return str; }
+}
+
+function buildEncodedWord(charset, method, text) {
+  if (method === 'B') {
+    const encoded = toBase64(text);
+    return `=?${charset}?B?${encoded}?=`;
+  } else if (method === 'Q') {
+    const encoded = toQP(text);
+    return `=?${charset}?Q?${encoded}?=`;
+  } else if (method === 'RAW') {
+    return text;
+  } else if (method === 'HEX') {
+    return `=?${charset}?Q?${toHexEscape(text)}?=`;
+  } else if (method === 'URL') {
+    return toURLEnc(text);
+  } else if (method === 'HTML') {
+    return toHTMLEntities(text);
+  } else if (method === 'XML') {
+    return toXMLNumRef(text);
+  } else if (method === 'PUNY') {
+    return toPunycode(text);
+  }
+  return text;
+}
+
+function buildFromEncoded(charset, method, name) {
+  if (!name) return '';
+  if (method === 'B') return `=?${charset}?B?${toBase64(name)}?=`;
+  if (method === 'Q') return `=?${charset}?Q?${toQP(name)}?=`;
+  return name;
+}
+
+function encodeAll() {
+  const subject = document.getElementById('subjectField').value;
+  const from = document.getElementById('fromField').value;
+  if (!subject.trim()) { alert('Please enter a subject.'); return; }
+
+  encoded = encodings.map(enc => {
+    let subjectOut, fromOut;
+    try {
+      subjectOut = buildEncodedWord(enc.charset, enc.method, subject);
+      fromOut = enc.method === 'B' || enc.method === 'Q'
+        ? `${buildFromEncoded(enc.charset, enc.method, from)} <${from.replace(/.*<(.+)>/, '$1') || 'from@example.com'}>`
+        : from;
+    } catch(e) {
+      subjectOut = `[unsupported: ${e.message}]`;
+      fromOut = from;
+    }
+    return { ...enc, subjectOut, fromOut };
+  });
+
+  renderResults();
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (encoded.length) renderResults();
+}
+
+function renderResults() {
+  const area = document.getElementById('resultsArea');
+  const subject = document.getElementById('subjectField').value;
+
+  let items = encoded;
+  if (currentFilter !== 'all') items = items.filter(e => e.cat === currentFilter);
+
+  const search = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
+  if (search) items = items.filter(e => e.label.toLowerCase().includes(search) || e.charset.toLowerCase().includes(search));
+
+  area.innerHTML = `
+    <div class="copy-all-bar">
+      <span class="stat">Showing <span>${items.length}</span> encodings for &nbsp;<code style="color:var(--accent2)">${esc(subject)}</code></span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="search-box"><input type="text" id="searchInput" placeholder="Search encoding..." oninput="filterSearch(this)" style="width:180px;font-size:11px;padding:6px 12px 6px 30px"></div>
+        <button class="btn-copy-all" onclick="copyAll()">📋 Copy all</button>
+      </div>
+    </div>
+    <div class="results-grid">
+      ${items.map(e => cardHTML(e)).join('')}
+    </div>`;
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function cardHTML(e) {
+  const hasError = e.subjectOut.startsWith('[unsupported');
+  return `<div class="enc-card" id="card-${e.id}">
+    <div class="card-header">
+      <span class="card-title">${esc(e.label)}</span>
+      <span class="category-pill">${e.cat}</span>
+      <button class="copy-btn" id="copybtn-${e.id}" onclick="copyCard('${e.id}')">copy</button>
+    </div>
+    <div class="card-body${hasError ? ' empty' : ''}">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:4px;letter-spacing:.06em">Subject:</div>
+      <div style="color:${hasError ? 'var(--red)' : 'var(--text)'}">${esc(e.subjectOut)}</div>
+      ${e.fromOut ? `<div style="font-size:10px;color:var(--text3);margin:8px 0 4px;letter-spacing:.06em">From:</div><div style="color:var(--text2)">${esc(e.fromOut)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function copyCard(id) {
+  const e = encoded.find(x => x.id === id);
+  if (!e) return;
+  const text = `Subject: ${e.subjectOut}\nFrom: ${e.fromOut}`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copybtn-' + id);
+    const card = document.getElementById('card-' + id);
+    if (btn) { btn.textContent = '✓ ok'; btn.classList.add('ok'); setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('ok'); }, 1500); }
+    if (card) { card.classList.add('copied'); setTimeout(() => card.classList.remove('copied'), 1500); }
+    showToast('Copied!');
+  });
+}
+
+function copyAll() {
+  let items = encoded;
+  if (currentFilter !== 'all') items = items.filter(e => e.cat === currentFilter);
+  const text = items.map(e => `[${e.label}]\nSubject: ${e.subjectOut}\nFrom: ${e.fromOut}`).join('\n\n');
+  navigator.clipboard.writeText(text).then(() => showToast('All encodings copied!'));
+}
+
+function filterSearch(inp) {
+  if (encoded.length) renderResults();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓ ' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// Auto-encode on load with defaults
+window.addEventListener('load', encodeAll);
+</script>
+</body>
+</html>
