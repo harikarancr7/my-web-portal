@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Domain Toolkit — Unified Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0b0e13;--s1:#111520;--s2:#161b27;--s3:#1c2333;
+  --border:#232d42;--border2:#2d3a52;
+  --cyan:#00c8ff;--green:#00e87a;--orange:#ff8c00;
+  --red:#ff3d5a;--yellow:#ffc107;--purple:#9b6dff;
+  --text:#c8d8f0;--muted:#4a607a;--muted2:#2a3a52;
+  --mono:'DM Mono',monospace;
+  --display:'Bebas Neue',sans-serif;
+  --sans:'Barlow',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 900px 500px at 0% 0%,rgba(0,200,255,0.035) 0%,transparent 60%),
+  radial-gradient(ellipse 700px 700px at 100% 100%,rgba(155,109,255,0.03) 0%,transparent 60%);
+  pointer-events:none;z-index:0}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* ── TOPBAR ── */
+.topbar{padding:0;background:var(--s1);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.topbar-inner{display:flex;align-items:stretch;gap:0}
+.logo-area{display:flex;align-items:center;gap:12px;padding:14px 24px;border-right:1px solid var(--border)}
+.logo-sq{width:34px;height:34px;background:linear-gradient(135deg,var(--cyan),var(--purple));border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:16px;color:#000;letter-spacing:1px}
+.logo-name{font-family:var(--display);font-size:22px;letter-spacing:2px;color:var(--text)}
+.logo-name span{color:var(--cyan)}
+.nav-tabs{display:flex;align-items:stretch;flex:1;overflow-x:auto}
+.nav-tab{display:flex;align-items:center;gap:8px;padding:0 22px;cursor:pointer;border-right:1px solid var(--border);font-size:13px;font-weight:600;color:var(--muted);transition:all .2s;white-space:nowrap;position:relative;letter-spacing:.3px}
+.nav-tab:hover{color:var(--text);background:rgba(255,255,255,0.02)}
+.nav-tab.active{color:var(--cyan);background:rgba(0,200,255,0.05)}
+.nav-tab.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--cyan)}
+.nav-tab .tab-icon{font-size:15px}
+.nav-tab .tab-badge{background:var(--cyan);color:#000;font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:18px;text-align:center}
+
+/* ── PAGES ── */
+.page{display:none;padding:32px 0 60px;animation:fadeIn .25s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PAGE HEADER ── */
+.page-header{margin-bottom:28px}
+.page-title{font-family:var(--display);font-size:38px;letter-spacing:2px;line-height:1;color:var(--text);margin-bottom:6px}
+.page-title span{color:var(--cyan)}
+.page-sub{font-size:13px;color:var(--muted);font-family:var(--mono);letter-spacing:.3px}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.card-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.015)}
+.card-ico{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.card-title{font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--text);flex:1;text-transform:uppercase}
+.card-body{padding:18px}
+
+/* ── FORM ELEMENTS ── */
+input[type=text],input[type=email],input[type=url],textarea,select{
+  width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:8px;
+  color:var(--text);font-family:var(--mono);font-size:13px;outline:none;
+  transition:border-color .2s,box-shadow .2s
+}
+input[type=text]:focus,input[type=email]:focus,input[type=url]:focus,textarea:focus,select:focus{
+  border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,200,255,0.08)
+}
+input[type=text],input[type=email],input[type=url],select{padding:11px 14px}
+textarea{padding:12px 14px;resize:vertical}
+select option{background:var(--s2)}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase}
+.fld-row{display:grid;gap:12px}
+.fld-row.c2{grid-template-columns:1fr 1fr}
+.fld-row.c3{grid-template-columns:1fr 1fr 1fr}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border:none;border-radius:8px;font-family:var(--sans);font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;letter-spacing:.3px;white-space:nowrap}
+.btn-primary{background:var(--cyan);color:#000}
+.btn-primary:hover{background:#33d6ff;transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,200,255,0.25)}
+.btn-primary:disabled{background:var(--muted2);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:var(--s3);color:var(--text);border:1px solid var(--border2)}
+.btn-secondary:hover{border-color:var(--cyan);color:var(--cyan)}
+.btn-green{background:var(--green);color:#000}
+.btn-green:hover{background:#33ff99;transform:translateY(-1px)}
+.btn-red{background:var(--red);color:#fff}
+.btn-danger{background:rgba(255,61,90,0.1);color:var(--red);border:1px solid rgba(255,61,90,0.2)}
+.btn-danger:hover{background:rgba(255,61,90,0.2)}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-xs{padding:4px 8px;font-size:10px}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.4px}
+.bg-green{background:rgba(0,232,122,0.1);color:var(--green);border:1px solid rgba(0,232,122,0.2)}
+.bg-red{background:rgba(255,61,90,0.1);color:var(--red);border:1px solid rgba(255,61,90,0.2)}
+.bg-yellow{background:rgba(255,193,7,0.1);color:var(--yellow);border:1px solid rgba(255,193,7,0.2)}
+.bg-cyan{background:rgba(0,200,255,0.1);color:var(--cyan);border:1px solid rgba(0,200,255,0.2)}
+.bg-muted{background:rgba(74,96,122,0.15);color:var(--muted);border:1px solid var(--border)}
+.bg-orange{background:rgba(255,140,0,0.1);color:var(--orange);border:1px solid rgba(255,140,0,0.2)}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{padding:10px 14px;text-align:left;background:rgba(255,255,255,0.025);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;white-space:nowrap}
+tbody td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;font-family:var(--mono);font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(255,255,255,0.02)}
+.td-domain{color:var(--cyan);font-weight:500}
+.td-muted{color:var(--muted)}
+
+/* ── PROGRESS ── */
+.prog-wrap{margin:14px 0}
+.prog-top{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:6px}
+.prog-track{height:5px;background:var(--s3);border-radius:5px;overflow:hidden}
+.prog-fill{height:100%;border-radius:5px;transition:width .4s ease}
+.prog-cyan{background:linear-gradient(90deg,var(--cyan),var(--purple))}
+.prog-green{background:linear-gradient(90deg,var(--green),var(--cyan))}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;gap:12px;margin-bottom:20px}
+.stats-row.c4{grid-template-columns:repeat(4,1fr)}
+.stats-row.c3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:700px){.stats-row.c4,.stats-row.c3{grid-template-columns:1fr 1fr}}
+.stat-box{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+.stat-num{font-family:var(--display);font-size:36px;letter-spacing:1px;line-height:1}
+.stat-lbl{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:1px}
+.sn-cyan{color:var(--cyan)}.sn-green{color:var(--green)}.sn-red{color:var(--red)}.sn-yellow{color:var(--yellow)}
+
+/* ── LOG ── */
+.log-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;max-height:160px;overflow-y:auto;padding:10px 14px;font-family:var(--mono);font-size:11px}
+.log-line{padding:2px 0;display:flex;gap:8px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.log-line:last-child{border-bottom:none}
+.log-ts{color:var(--muted);flex-shrink:0}
+.lc-ok{color:var(--green)}.lc-err{color:var(--red)}.lc-info{color:var(--cyan)}.lc-warn{color:var(--yellow)}
+
+/* ── TEXTAREA OUTPUT ── */
+.output-area{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;color:var(--text);min-height:120px;max-height:320px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.7}
+
+/* ── DOMAIN CHIP ── */
+.domain-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.15);border-radius:5px;padding:3px 9px;font-family:var(--mono);font-size:11px;color:var(--cyan);margin:2px}
+.domain-chip button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;line-height:1;padding:0;transition:color .15s}
+.domain-chip button:hover{color:var(--red)}
+
+/* ── GRID LAYOUTS ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+
+/* ── SECTION DIVIDER ── */
+.sec-divider{display:flex;align-items:center;gap:12px;margin:24px 0 18px;font-family:var(--display);font-size:18px;letter-spacing:2px;color:var(--muted)}
+.sec-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── HINT ── */
+.hint{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.6;margin-top:6px}
+.hint.warn{color:var(--yellow)}
+.hint.info{color:var(--cyan)}
+
+/* ── URL INSTRUCTION BOX ── */
+.instruction-box{background:rgba(0,200,255,0.04);border:1px solid rgba(0,200,255,0.15);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;gap:14px;align-items:flex-start}
+.ib-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.ib-text{font-size:13px;line-height:1.7;color:var(--text)}
+.ib-text strong{color:var(--cyan)}
+.ib-text code{font-family:var(--mono);font-size:11px;background:rgba(0,200,255,0.08);padding:2px 6px;border-radius:4px;color:var(--cyan)}
+
+/* ── STEP TRACKER ── */
+.steps{display:flex;gap:0;margin-bottom:24px;background:var(--s1);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.step{flex:1;padding:12px 16px;text-align:center;border-right:1px solid var(--border);font-size:12px;font-weight:600;color:var(--muted);transition:all .3s;position:relative}
+.step:last-child{border-right:none}
+.step .step-num{font-family:var(--display);font-size:22px;color:var(--border2);display:block;line-height:1}
+.step.done .step-num{color:var(--green)}
+.step.active .step-num{color:var(--cyan)}
+.step.done{color:var(--green)}
+.step.active{color:var(--cyan);background:rgba(0,200,255,0.04)}
+
+/* ── COPY BTN ── */
+.cpbtn{background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:var(--mono);transition:all .15s}
+.cpbtn:hover{color:var(--cyan);border-color:var(--cyan)}
+
+/* ── IFRAME NOTE ── */
+.iframe-note{background:rgba(255,193,7,0.05);border:1px solid rgba(255,193,7,0.15);border-radius:8px;padding:12px 16px;font-family:var(--mono);font-size:11px;color:var(--yellow);margin-bottom:14px;line-height:1.6}
+
+/* ── DNS RECORD ROWS ── */
+.dns-section{margin-bottom:14px}
+.dns-type{font-family:var(--display);font-size:14px;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
+.dns-record{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;background:var(--s2);border-radius:6px;margin-bottom:4px;font-family:var(--mono);font-size:12px}
+.dns-val{flex:1;word-break:break-all;color:var(--cyan)}
+</style>
+</head>
+<body>
+
+<!-- ══════ TOPBAR ══════ -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="logo-area">
+      <div class="logo-sq">DT</div>
+      <div class="logo-name">DOMAIN<span>KIT</span></div>
+    </div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="showPage('senderscore')" id="tab-senderscore">
+        <span class="tab-icon">📡</span> SenderScore Extractor
+      </div>
+      <div class="nav-tab" onclick="showPage('dnscheck')" id="tab-dnscheck">
+        <span class="tab-icon">🔍</span> DNS Checker
+      </div>
+      <div class="nav-tab" onclick="showPage('subscriber')" id="tab-subscriber">
+        <span class="tab-icon">📧</span> Newsletter Subscriber
+      </div>
+      <div class="nav-tab" onclick="showPage('domainlist')" id="tab-domainlist">
+        <span class="tab-icon">📋</span> Domain Manager
+        <span class="tab-badge" id="dmBadge">0</span>
+      </div>
+      <div class="nav-tab" onclick="showPage('iptools')" id="tab-iptools">
+        <span class="tab-icon">🌐</span> IP Tools
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE 1 — SENDERSCORE EXTRACTOR
+══════════════════════════════════════════════ -->
+<div class="page active" id="page-senderscore">
+<div class="wrap">
+  <div class="page-header">
+    <div class="page-title">SENDER<span>SCORE</span> EXTRACTOR</div>
+    <div class="page-sub">// paste your senderscore URL → auto-collect all domains across all pages</div>
+  </div>
+
+  <div class="instruction-box">
+    <div class="ib-icon">💡</div>
+    <div class="ib-text">
+      <strong>How to use:</strong> Go to <code>senderscore.org</code>, run a report for your IP, then copy the full URL from your browser (e.g. <code>https://senderscore.org/assess/get-your-score/report/?lookup=204.220.169.31&authenticated=true</code>) and paste it below. The tool will open that page and guide you through extracting all domains.
+      <br><br>
+      <strong>Note:</strong> Because SenderScore uses Cloudflare protection, this tool opens the page in a new tab and helps you extract domains from the loaded content. Paste the page text below after loading.
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step active" id="ss-step1"><span class="step-num">01</span>Paste URL</div>
+    <div class="step" id="ss-step2"><span class="step-num">02</span>Open & Load</div>
+    <div class="step" id="ss-step3"><span class="step-num">03</span>Paste Content</div>
+    <div class="step" id="ss-step4"><span class="step-num">04</span>Extract</div>
+    <div class="step" id="ss-step5"><span class="step-num">05</span>Export</div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:20px">
+    <div>
+      <!-- STEP 1: URL Input -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head">
+          <div class="card-ico" style="background:rgba(0,200,255,0.15)">🔗</div>
+          <span class="card-title">Step 1 — SenderScore Report URL</span>
+        </div>
+        <div class="card-body">
+          <div class="fld">
+            <label>Report URL</label>
+            <input type="url" id="ssUrl" placeholder="https://senderscore.org/assess/get-your-score/report/?lookup=YOUR_IP&authenticated=true" value="https://senderscore.org/assess/get-your-score/report/?lookup=204.220.169.31&authenticated=true">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="ssOpenPage()">
+              &#128279; Open SenderScore Page
+            </button>
+            <button class="btn btn-secondary" onclick="ssExtractFromURL()">
+              &#9889; Extract IP from URL
+            </button>
+          </div>
+          <div class="hint" style="margin-top:10px">After the page loads (solve Cloudflare if needed), select all text on the page (Ctrl+A, Ctrl+C) and paste below.</div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Multiple URLs -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-ico" style="background:rgba(155,109,255,0.15)">📋</div>
+          <span class="card-title">Multiple IP Reports (Batch)</span>
+        </div>
+        <div class="card-body">
+          <div class="fld">
+            <label>Multiple IPs (one per line)</label>
+            <textarea id="batchIPs" rows="4" placeholder="204.220.169.31&#10;198.51.100.42&#10;203.0.113.10"></textarea>
+          </div>
+          <button class="btn btn-secondary" onclick="ssBatchOpen()">&#128279; Open All Report Pages</button>
+          <div class="hint">Opens each IP's SenderScore report in a new tab.</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <!-- STEP 3: Paste page text -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head">
+          <div class="card-ico" style="background:rgba(0,232,122,0.15)">📄</div>
+          <span class="card-title">Step 2 — Paste Page Content</span>
+          <button class="cpbtn" onclick="clearSSContent()">Clear</button>
+        </div>
+        <div class="card-body">
+          <div class="fld">
+            <label>Paste full page text here (Ctrl+A then Ctrl+C from the SenderScore tab)</label>
+            <textarea id="ssPageContent" rows="8" placeholder="Paste the entire page text here...&#10;&#10;The extractor will automatically find all domain names from the content."></textarea>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-green" onclick="ssExtractDomains()">
+              &#9889; Extract All Domains
+            </button>
+            <button class="btn btn-secondary" onclick="ssExtractFromHTML()">
+              &#128196; Parse HTML Source
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTER OPTIONS -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-ico" style="background:rgba(255,140,0,0.15)">⚙️</div>
+          <span class="card-title">Filter Options</span>
+        </div>
+        <div class="card-body">
+          <div class="fld-row c2">
+            <div class="fld">
+              <label>Min domain length</label>
+              <input type="text" id="ssMinLen" value="4" style="text-align:center">
+            </div>
+            <div class="fld">
+              <label>Max results (0=all)</label>
+              <input type="text" id="ssMaxResults" value="0" style="text-align:center">
+            </div>
+          </div>
+          <div class="fld">
+            <label>Exclude keywords (comma separated)</label>
+            <input type="text" id="ssExclude" value="senderscore,validity,google,jquery,css,png,jpg,svg,woff,cloudflare,googleapis,gstatic,facebook,twitter,linkedin,youtube,w3.org,schema.org,mozilla,microsoft,apple">
+          </div>
+          <div class="fld">
+            <label>Only these TLDs (comma, empty=all)</label>
+            <input type="text" id="ssTLDs" value="" placeholder="com,net,org,io (empty = all TLDs)">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="ssResultsWrap" style="display:none">
+    <div class="stats-row c4" style="margin-bottom:16px">
+      <div class="stat-box"><div class="stat-num sn-cyan" id="ss-total">0</div><div class="stat-lbl">TOTAL FOUND</div></div>
+      <div class="stat-box"><div class="stat-num sn-green" id="ss-unique">0</div><div class="stat-lbl">UNIQUE</div></div>
+      <div class="stat-box"><div class="stat-num sn-yellow" id="ss-filtered">0</div><div class="stat-lbl">AFTER FILTER</div></div>
+      <div class="stat-box"><div class="stat-num sn-red" id="ss-excluded">0</div><div class="stat-lbl">EXCLUDED</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-ico" style="background:rgba(0,232,122,0.15)">✅</div>
+        <span class="card-title">Extracted Domains</span>
+        <div style="display:flex;gap:6px;margin-left:auto">
+          <button class="btn btn-sm btn-secondary" onclick="ssCopyAll()">📋 Copy All</button>
+          <button class="btn btn-sm btn-green" onclick="ssSaveToManager()">➕ Add to Manager</button>
+          <button class="btn btn-sm btn-secondary" onclick="ssExportTXT()">⬇ TXT</button>
+          <button class="btn btn-sm btn-secondary" onclick="ssExportCSV()">⬇ CSV</button>
+          <button class="btn btn-sm btn-danger" onclick="ssClearResults()">🗑 Clear</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="text" id="ssSearch" placeholder="Filter results..." style="max-width:250px;padding:7px 12px" oninput="ssFilterDisplay()">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--muted)" id="ssDisplayCount"></span>
+        </div>
+        <div class="output-area" id="ssOutput" style="min-height:200px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div style="margin-top:16px">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px">ACTIVITY LOG</div>
+    <div class="log-box" id="ssLog"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE 2 — DNS CHECKER
+══════════════════════════════════════════════ -->
+<div class="page" id="page-dnscheck">
+<div class="wrap">
+  <div class="page-header">
+    <div class="page-title">DNS <span>CHECKER</span></div>
+    <div class="page-sub">// A, AAAA, MX, NS, TXT, SOA, PTR, CNAME, CAA — all records in one scan</div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-ico" style="background:rgba(0,200,255,0.15)">🔍</div>
+        <span class="card-title">Single Domain Lookup</span>
+      </div>
+      <div class="card-body">
+        <div class="fld">
+          <label>Domain</label>
+          <input type="text" id="dnsInput" placeholder="example.com">
+        </div>
+        <div class="fld-row c2">
+          <div class="fld">
+            <label>Record Type</label>
+            <select id="dnsType">
+              <option value="ALL">ALL Records</option>
+              <option value="A">A (IPv4)</option>
+              <option value="AAAA">AAAA (IPv6)</option>
+              <option value="MX">MX (Mail)</option>
+              <option value="NS">NS (Nameserver)</option>
+              <option value="TXT">TXT</option>
+              <option value="SOA">SOA</option>
+              <option value="CNAME">CNAME</option>
+              <option value="CAA">CAA</option>
+            </select>
+          </div>
+          <div class="fld" style="display:flex;align-items:flex-end">
+            <button class="btn btn-primary" style="width:100%" onclick="dnsLookup()">&#9889; Lookup</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-ico" style="background:rgba(155,109,255,0.15)">📋</div>
+        <span class="card-title">Bulk DNS Lookup</span>
+      </div>
+      <div class="card-body">
+        <div class="fld">
+          <label>Domains (one per line) or load from Manager</label>
+          <textarea id="dnsBulkInput" rows="4" placeholder="google.com&#10;github.com&#10;cloudflare.com"></textarea>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="dnsBulkLookup()">&#9889; Bulk Lookup</button>
+          <button class="btn btn-secondary" onclick="loadFromManager('dnsBulkInput')">&#8645; From Manager</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DNS Results -->
+  <div id="dnsResults" style="display:none">
+    <div class="sec-divider">RESULTS</div>
+    <div id="dnsResultsBody"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE 3 — NEWSLETTER SUBSCRIBER
+══════════════════════════════════════════════ -->
+<div class="page" id="page-subscriber">
+<div class="wrap">
+  <div class="page-header">
+    <div class="page-title">NEWSLETTER <span>SUBSCRIBER</span></div>
+    <div class="page-sub">// open subscription pages for multiple domains in one click</div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:20px">
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head">
+          <div class="card-ico" style="background:rgba(0,200,255,0.15)">📋</div>
+          <span class="card-title">Domains to Subscribe</span>
+        </div>
+        <div class="card-body">
+          <div class="fld">
+            <textarea id="subDomains" rows="8" placeholder="nike.com&#10;adidas.com&#10;zara.com&#10;asos.com&#10;&#10;One domain per line — or load from Domain Manager"></textarea>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadFromManager('subDomains')">&#8645; Load from Manager</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-ico" style="background:rgba(0,232,122,0.15)">👤</div>
+          <span class="card-title">Your Details</span>
+        </div>
+        <div class="card-body">
+          <div class="fld">
+            <label>Email(s) — one per line for multiple IDs</label>
+            <textarea id="subEmail" rows="3" placeholder="you@gmail.com&#10;you2@outlook.com"></textarea>
+          </div>
+          <div class="fld-row c2">
+            <div class="fld"><label>First Name</label><input type="text" id="subFirst" placeholder="John"></div>
+            <div class="fld"><label>Last Name</label><input type="text" id="subLast" placeholder="Smith"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head">
+          <div class="card-ico" style="background:rgba(255,140,0,0.15)">⚙️</div>
+          <span class="card-title">Options</span>
+        </div>
+        <div class="card-body">
+          <div class="fld">
+            <label>Open Mode</label>
+            <select id="subOpenMode">
+              <option value="stagger">Staggered (500ms apart — recommended)</option>
+              <option value="all">All at once</option>
+              <option value="one">One by one (confirm each)</option>
+            </select>
+          </div>
+          <div class="fld">
+            <label>Preferred Signup Paths (tried in order)</label>
+            <textarea id="subPaths" rows="4">/newsletter
+/subscribe
+/email-signup
+/pages/newsletter
+/join
+/deals</textarea>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:var(--text)">
+              <input type="checkbox" id="subRetry" checked style="accent-color:var(--cyan);width:14px;height:14px"> Auto-retry popup-blocked
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:var(--text)">
+              <input type="checkbox" id="subAlt" checked style="accent-color:var(--cyan);width:14px;height:14px"> Try alt paths if main fails
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-ico" style="background:rgba(255,61,90,0.15)">🚀</div>
+          <span class="card-title">Launch</span>
+        </div>
+        <div class="card-body">
+          <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;margin-bottom:12px" onclick="subRun()">
+            &#9889; Start Subscribing All Domains
+          </button>
+          <div id="subProgWrap" style="display:none">
+            <div class="prog-wrap">
+              <div class="prog-top"><span id="subProgLabel">Processing...</span><span id="subProgCount">0/0</span></div>
+              <div class="prog-track"><div class="prog-fill prog-cyan" id="subProgFill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="stats-row c3" id="subStats" style="display:none">
+            <div class="stat-box"><div class="stat-num sn-green" id="sub-ok">0</div><div class="stat-lbl">OPENED</div></div>
+            <div class="stat-box"><div class="stat-num sn-yellow" id="sub-pend">0</div><div class="stat-lbl">PENDING</div></div>
+            <div class="stat-box"><div class="stat-num sn-red" id="sub-fail">0</div><div class="stat-lbl">BLOCKED</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub Results -->
+  <div id="subResultsWrap" style="display:none">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-ico" style="background:rgba(0,232,122,0.15)">📊</div>
+        <span class="card-title">Subscription Results</span>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn btn-sm btn-secondary" onclick="subExportCSV()">⬇ CSV</button>
+          <button class="btn btn-sm btn-secondary" onclick="subOpenBlocked()">↗ Open Blocked</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Domain</th><th>Email</th><th>URL Opened</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="subResultsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px">LOG</div>
+    <div class="log-box" id="subLog"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE 4 — DOMAIN MANAGER
+══════════════════════════════════════════════ -->
+<div class="page" id="page-domainlist">
+<div class="wrap">
+  <div class="page-header">
+    <div class="page-title">DOMAIN <span>MANAGER</span></div>
+    <div class="page-sub">// central store for all collected domains — use across all tools</div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-ico" style="background:rgba(0,200,255,0.15)">➕</div>
+        <span class="card-title">Add Domains</span>
+      </div>
+      <div class="card-body">
+        <div class="fld">
+          <label>Paste domains (one per line, or comma/space separated)</label>
+          <textarea id="dmAddInput" rows="6" placeholder="google.com&#10;github.com, cloudflare.com&#10;example.org"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="dmAdd()">➕ Add to List</button>
+          <button class="btn btn-secondary" onclick="dmImportFile()">📁 Import File</button>
+          <input type="file" id="dmFileInput" accept=".txt,.csv" style="display:none" onchange="dmReadFile(event)">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-ico" style="background:rgba(155,109,255,0.15)">🔍</div>
+        <span class="card-title">Search & Filter</span>
+      </div>
+      <div class="card-body">
+        <div class="fld">
+          <label>Search domains</label>
+          <input type="text" id="dmSearch" placeholder="Filter by keyword..." oninput="dmRender()">
+        </div>
+        <div class="fld-row c2">
+          <div class="fld">
+            <label>Filter TLD</label>
+            <input type="text" id="dmFilterTLD" placeholder=".com .org" oninput="dmRender()">
+          </div>
+          <div class="fld">
+            <label>Sort</label>
+            <select id="dmSort" onchange="dmRender()">
+              <option value="alpha">A → Z</option>
+              <option value="zalpha">Z → A</option>
+              <option value="added">Recently Added</option>
+              <option value="tld">By TLD</option>
+            </select>
+          </div>
+        </div>
+        <div class="stats-row c3">
+          <div class="stat-box"><div class="stat-num sn-cyan" id="dm-total">0</div><div class="stat-lbl">TOTAL</div></div>
+          <div class="stat-box"><div class="stat-num sn-green" id="dm-shown">0</div><div class="stat-lbl">SHOWN</div></div>
+          <div class="stat-box"><div class="stat-num sn-yellow" id="dm-tlds">0</div><div class="stat-lbl">UNIQUE TLDs</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action bar -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+    <button class="btn btn-secondary btn-sm" onclick="dmSelectAll()">☑ Select All</button>
+    <button class="btn btn-secondary btn-sm" onclick="dmDeselectAll()">☐ Deselect All</button>
+    <button class="btn btn-secondary btn-sm" onclick="dmExportSelected()">⬇ Export Selected</button>
+    <button class="btn btn-secondary btn-sm" onclick="dmExportAll()">⬇ Export All (.txt)</button>
+    <button class="btn btn-secondary btn-sm" onclick="dmExportCSV()">⬇ Export CSV</button>
+    <button class="btn btn-secondary btn-sm" onclick="dmCopyAll()">📋 Copy All</button>
+    <button class="btn btn-secondary btn-sm" onclick="dmDedup()">🔁 Deduplicate</button>
+    <button class="btn btn-danger btn-sm" onclick="dmClearAll()">🗑 Clear All</button>
+  </div>
+
+  <div class="card">
+    <div class="card-body" style="padding:12px">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="dmCheckAll" onchange="dmToggleAll(this)" style="accent-color:var(--cyan)"></th>
+              <th>#</th><th>Domain</th><th>TLD</th><th>Added</th><th>Source</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="dmTableBody"></tbody>
+        </table>
+      </div>
+      <div id="dmEmpty" style="text-align:center;padding:32px;font-family:var(--mono);font-size:13px;color:var(--muted)">
+        No domains yet. Extract from SenderScore or add manually above.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PAGE 5 — IP TOOLS
+══════════════════════════════════════════════ -->
+<div class="page" id="page-iptools">
+<div class="wrap">
+  <div class="page-header">
+    <div class="page-title">IP <span>TOOLS</span></div>
+    <div class="page-sub">// IP lookup, PTR reverse DNS, blacklist check, geolocation</div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-ico" style="background:rgba(0,200,255,0.15)">🌐</div>
+        <span class="card-title">IP / Domain Lookup</span>
+      </div>
+      <div class="card-body">
+        <div class="fld">
+          <label>IP Address or Domain</label>
+          <input type="text" id="ipInput" placeholder="204.220.169.31 or example.com">
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="ipLookup()">&#9889; Lookup</button>
+          <button class="btn btn-secondary" onclick="ipGetMine()">&#127987; My IP</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-ico" style="background:rgba(255,61,90,0.15)">🚫</div>
+        <span class="card-title">Blacklist Check</span>
+      </div>
+      <div class="card-body">
+        <div class="fld">
+          <label>IP to Check Against Blacklists</label>
+          <input type="text" id="blInput" placeholder="204.220.169.31">
+        </div>
+        <button class="btn btn-primary" onclick="blCheck()">&#9889; Check Blacklists</button>
+        <div class="hint">Checks against common DNSBL blacklists via DNS PTR.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ipResults" style="display:none">
+    <div class="sec-divider">LOOKUP RESULTS</div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-ico" style="background:rgba(0,200,255,0.15)">📍</div>
+          <span class="card-title">IP Information</span>
+        </div>
+        <div class="card-body">
+          <div class="output-area" id="ipInfoOutput" style="min-height:180px"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-ico" style="background:rgba(0,232,122,0.15)">🔄</div>
+          <span class="card-title">Reverse DNS (PTR)</span>
+        </div>
+        <div class="card-body">
+          <div class="output-area" id="ipPTROutput" style="min-height:180px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="blResults" style="display:none;margin-top:20px">
+    <div class="sec-divider">BLACKLIST RESULTS</div>
+    <div class="card">
+      <div class="card-body">
+        <div id="blResultsBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════ -->
+<script>
+// ══════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function ts() {
+  var n = new Date();
+  return n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0')+':'+n.getSeconds().toString().padStart(2,'0');
+}
+function log(boxId, msg, type) {
+  var b = document.getElementById(boxId);
+  if(!b) return;
+  var cls = type==='ok'?'lc-ok':type==='err'?'lc-err':type==='warn'?'lc-warn':'lc-info';
+  var icon = type==='ok'?'✓':type==='err'?'✗':type==='warn'?'⚠':'→';
+  b.innerHTML += '<div class="log-line"><span class="log-ts">'+ts()+'</span><span class="'+cls+'">'+icon+' '+msg+'</span></div>';
+  b.scrollTop = b.scrollHeight;
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function copyText(t){try{navigator.clipboard.writeText(t);}catch(e){}}
+
+function downloadFile(content, filename, mime) {
+  var blob = new Blob([content], {type: mime||'text/plain'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// ══════════════════════════════════════════════
+// SENDERSCORE EXTRACTOR
+// ══════════════════════════════════════════════
+var ssFoundDomains = [];
+
+function ssStep(n) {
+  for(var i=1;i<=5;i++){
+    var el = document.getElementById('ss-step'+i);
+    if(!el) continue;
+    el.classList.remove('active','done');
+    if(i<n) el.classList.add('done');
+    if(i===n) el.classList.add('active');
+  }
+}
+
+function ssOpenPage() {
+  var url = document.getElementById('ssUrl').value.trim();
+  if(!url){alert('Please enter a SenderScore URL');return;}
+  window.open(url,'_blank','noopener');
+  ssStep(2);
+  log('ssLog','Opened: '+url,'ok');
+  log('ssLog','After page loads: press Ctrl+A, Ctrl+C to copy all text, then paste below','info');
+}
+
+function ssExtractFromURL() {
+  var url = document.getElementById('ssUrl').value.trim();
+  var m = url.match(/lookup=([0-9.]+)/);
+  if(m) {
+    log('ssLog','Found IP in URL: '+m[1],'ok');
+    document.getElementById('ipInput').value = m[1];
+    alert('IP extracted: '+m[1]+'\nYou can now use it in the IP Tools tab.');
+  } else {
+    log('ssLog','No IP found in URL','warn');
+  }
+}
+
+function ssBatchOpen() {
+  var ips = document.getElementById('batchIPs').value.trim().split('\n').map(function(l){return l.trim();}).filter(Boolean);
+  if(!ips.length){alert('Enter at least one IP');return;}
+  ips.forEach(function(ip,i){
+    setTimeout(function(){
+      var url = 'https://senderscore.org/assess/get-your-score/report/?lookup='+encodeURIComponent(ip)+'&authenticated=true';
+      window.open(url,'_blank','noopener');
+      log('ssLog','Opened report for IP: '+ip,'ok');
+    }, i*800);
+  });
+}
+
+function clearSSContent(){document.getElementById('ssPageContent').value='';}
+
+function ssExtractDomains() {
+  var text = document.getElementById('ssPageContent').value.trim();
+  if(!text){alert('Please paste the page content first (Step 2).');return;}
+  ssStep(4);
+
+  var excludeRaw = document.getElementById('ssExclude').value;
+  var excludes = excludeRaw.split(',').map(function(e){return e.trim().toLowerCase();}).filter(Boolean);
+  var tldFilter = document.getElementById('ssTLDs').value.split(',').map(function(t){return t.trim().replace('.','').toLowerCase();}).filter(Boolean);
+  var minLen = parseInt(document.getElementById('ssMinLen').value)||4;
+  var maxRes = parseInt(document.getElementById('ssMaxResults').value)||0;
+
+  // Extract all domain-like patterns
+  var pattern = /\b([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b/g;
+  var found = text.match(pattern) || [];
+
+  log('ssLog','Raw matches found: '+found.length,'info');
+
+  var raw = found.length;
+  var seen = {};
+  var filtered = [];
+  var excCount = 0;
+
+  found.forEach(function(d){
+    d = d.toLowerCase().replace(/\.$/, '');
+    if(seen[d]) return;
+    seen[d] = true;
+
+    // Min length check
+    if(d.length < minLen){excCount++;return;}
+
+    // Exclude keywords
+    for(var i=0;i<excludes.length;i++){
+      if(d.indexOf(excludes[i])>-1){excCount++;return;}
+    }
+
+    // IP-like — skip
+    if(/^\d+\.\d+\.\d+\.\d+$/.test(d)){excCount++;return;}
+
+    // TLD filter
+    if(tldFilter.length){
+      var parts = d.split('.');
+      var tld = parts[parts.length-1];
+      if(tldFilter.indexOf(tld)===-1){excCount++;return;}
+    }
+
+    filtered.push(d);
+  });
+
+  var unique = filtered.length;
+
+  if(maxRes>0 && filtered.length>maxRes) filtered = filtered.slice(0,maxRes);
+
+  ssFoundDomains = filtered;
+
+  // Update stats
+  document.getElementById('ss-total').textContent   = raw;
+  document.getElementById('ss-unique').textContent  = unique;
+  document.getElementById('ss-filtered').textContent= filtered.length;
+  document.getElementById('ss-excluded').textContent= excCount;
+  document.getElementById('ssResultsWrap').style.display='block';
+
+  ssRenderOutput();
+  ssStep(5);
+  log('ssLog','Extracted '+filtered.length+' domains ('+excCount+' excluded)','ok');
+}
+
+function ssExtractFromHTML() {
+  var text = document.getElementById('ssPageContent').value;
+  // Also try to parse href and anchor text
+  var hrefs = text.match(/href=["']([^"']+)["']/g)||[];
+  var extra = [];
+  hrefs.forEach(function(h){
+    var m = h.match(/href=["'](?:https?:\/\/)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    if(m) extra.push(m[1]);
+  });
+  if(extra.length){
+    document.getElementById('ssPageContent').value += '\n' + extra.join('\n');
+    log('ssLog','Found '+extra.length+' additional domains from HTML hrefs','info');
+  }
+  ssExtractDomains();
+}
+
+function ssRenderOutput() {
+  var search = (document.getElementById('ssSearch').value||'').toLowerCase();
+  var show = ssFoundDomains.filter(function(d){return !search||d.indexOf(search)>-1;});
+  document.getElementById('ssOutput').textContent = show.join('\n');
+  document.getElementById('ssDisplayCount').textContent = show.length + ' of ' + ssFoundDomains.length + ' domains';
+}
+function ssFilterDisplay(){ssRenderOutput();}
+
+function ssCopyAll(){
+  copyText(ssFoundDomains.join('\n'));
+  log('ssLog','Copied '+ssFoundDomains.length+' domains to clipboard','ok');
+}
+
+function ssSaveToManager(){
+  dmAddDomains(ssFoundDomains, 'SenderScore');
+  log('ssLog','Added '+ssFoundDomains.length+' domains to Manager','ok');
+  showPage('domainlist');
+}
+
+function ssExportTXT(){downloadFile(ssFoundDomains.join('\n'),'domains-senderscore.txt','text/plain');log('ssLog','Exported TXT','ok');}
+function ssExportCSV(){
+  var csv = 'domain\n'+ssFoundDomains.map(function(d){return '"'+d+'"';}).join('\n');
+  downloadFile(csv,'domains-senderscore.csv','text/csv');
+  log('ssLog','Exported CSV','ok');
+}
+function ssClearResults(){ssFoundDomains=[];document.getElementById('ssResultsWrap').style.display='none';ssStep(1);}
+
+// ══════════════════════════════════════════════
+// DNS CHECKER
+// ══════════════════════════════════════════════
+function dnsQ(name, type) {
+  return fetch('https://dns.google/resolve?name='+encodeURIComponent(name)+'&type='+encodeURIComponent(type),
+    {headers:{'Accept':'application/dns-json'}})
+    .then(function(r){return r.json();})
+    .then(function(d){return d.Answer||d.Authority||[];})
+    .catch(function(){
+      return fetch('https://cloudflare-dns.com/dns-query?name='+encodeURIComponent(name)+'&type='+encodeURIComponent(type),
+        {headers:{'Accept':'application/dns-json'}})
+        .then(function(r){return r.json();})
+        .then(function(d){return d.Answer||d.Authority||[];})
+        .catch(function(){return [];});
+    });
+}
+
+function dnsLookup() {
+  var domain = document.getElementById('dnsInput').value.trim().replace(/^https?:\/\//,'').replace(/\//,'');
+  var type = document.getElementById('dnsType').value;
+  if(!domain){alert('Enter a domain');return;}
+
+  var types = type==='ALL' ? ['A','AAAA','MX','NS','TXT','SOA','CNAME','CAA'] : [type];
+  var promises = types.map(function(t){return dnsQ(domain,t).then(function(r){return{type:t,records:r};});});
+
+  document.getElementById('dnsResults').style.display='block';
+  document.getElementById('dnsResultsBody').innerHTML = '<div style="font-family:var(--mono);font-size:12px;color:var(--muted);padding:20px">Looking up '+esc(domain)+'...</div>';
+
+  Promise.all(promises).then(function(results){
+    var html = '<div class="card"><div class="card-head"><div class="card-ico" style="background:rgba(0,200,255,0.15)">📋</div><span class="card-title">'+esc(domain)+'</span></div><div class="card-body">';
+    results.forEach(function(r){
+      html += '<div class="dns-section"><div class="dns-type">'+r.type+'</div>';
+      if(!r.records.length){html+='<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:6px 0">No '+r.type+' records found</div>';}
+      else {
+        r.records.forEach(function(rec){
+          html += '<div class="dns-record"><span class="dns-val">'+esc(rec.data||'')+'</span>';
+          if(rec.TTL) html += '<span style="color:var(--muted);font-size:10px">TTL: '+rec.TTL+'</span>';
+          html += '</div>';
+        });
+      }
+      html += '</div>';
+    });
+    html += '</div></div>';
+    document.getElementById('dnsResultsBody').innerHTML = html;
+  });
+}
+
+function dnsBulkLookup() {
+  var lines = document.getElementById('dnsBulkInput').value.trim().split('\n').map(function(l){return l.trim().replace(/^https?:\/\//,'').replace(/\//,'');}).filter(Boolean);
+  if(!lines.length){alert('Enter at least one domain');return;}
+  document.getElementById('dnsResults').style.display='block';
+  document.getElementById('dnsResultsBody').innerHTML = '<div style="font-family:var(--mono);color:var(--muted);padding:20px">Looking up '+lines.length+' domains...</div>';
+
+  var html = '<div style="display:grid;gap:12px">';
+  var done = 0;
+  var rows = [];
+
+  lines.forEach(function(domain,i){
+    Promise.all([dnsQ(domain,'A'),dnsQ(domain,'MX'),dnsQ(domain,'NS')]).then(function(r){
+      var a=r[0],mx=r[1],ns=r[2];
+      rows[i] = '<div class="tbl-wrap"><table><thead><tr><th>Domain</th><th>A (IPv4)</th><th>MX</th><th>NS</th></tr></thead><tbody>'
+        +'<tr><td class="td-domain">'+esc(domain)+'</td>'
+        +'<td>'+a.map(function(x){return esc(x.data);}).join('<br>')||'<span style="color:var(--muted)">—</span>'+'</td>'
+        +'<td>'+mx.map(function(x){return esc(x.data);}).join('<br>')||'<span style="color:var(--muted)">—</span>'+'</td>'
+        +'<td>'+ns.map(function(x){return esc(x.data);}).join('<br>')||'<span style="color:var(--muted)">—</span>'+'</td>'
+        +'</tr></tbody></table></div>';
+      done++;
+      if(done===lines.length){
+        document.getElementById('dnsResultsBody').innerHTML = rows.join('');
+      }
+    });
+  });
+}
+
+// ══════════════════════════════════════════════
+// NEWSLETTER SUBSCRIBER
+// ══════════════════════════════════════════════
+var SUB_PATHS_DEFAULT = ['/newsletter','/subscribe','/email-signup','/pages/newsletter','/join','/deals','/signup','/sign-up'];
+var KNOWN_SIGNUP = {
+  'nike.com':'https://www.nike.com/newsletter',
+  'adidas.com':'https://www.adidas.com/us/newsletter',
+  'zara.com':'https://www.zara.com/us/en/newsletter-signup.html',
+  'hm.com':'https://www2.hm.com/en_us/newsletter.html',
+  'asos.com':'https://www.asos.com/discover/newsletter/',
+  'amazon.com':'https://www.amazon.com/subscribe',
+  'target.com':'https://www.target.com/c/email-signup/-/N-4srre',
+  'walmart.com':'https://www.walmart.com/account/emailsignup'
+};
+var subResults = [];
+var subOk=0,subPend=0,subFail=0;
+
+function subGetPaths(){
+  return document.getElementById('subPaths').value.trim().split('\n').map(function(l){return l.trim();}).filter(Boolean);
+}
+
+function subRun() {
+  var rawDomains = document.getElementById('subDomains').value.trim();
+  var emails = document.getElementById('subEmail').value.trim().split('\n').map(function(e){return e.trim();}).filter(function(e){return e.indexOf('@')>-1;});
+  if(!rawDomains){alert('Enter at least one domain');return;}
+  if(!emails.length){alert('Enter at least one email address');return;}
+
+  var domains = rawDomains.split('\n').map(function(d){
+    return d.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/.*$/,'');
+  }).filter(function(d){return d&&d.indexOf('.')>-1;});
+
+  subResults=[]; subOk=0; subPend=0; subFail=0;
+  document.getElementById('subResultsBody').innerHTML='';
+  document.getElementById('subResultsWrap').style.display='none';
+  document.getElementById('subProgWrap').style.display='block';
+  document.getElementById('subStats').style.display='grid';
+  document.getElementById('subLog').innerHTML='';
+  subUpdateStats();
+
+  var mode = document.getElementById('subOpenMode').value;
+  var paths = subGetPaths();
+
+  log('subLog','Starting for '+domains.length+' domains with '+emails.length+' email(s)','info');
+
+  function pickEmail(i){return emails[i%emails.length];}
+
+  function processOne(i) {
+    if(i>=domains.length){
+      subFinish();
+      return;
+    }
+    var domain = domains[i];
+    var email = pickEmail(i);
+    var url = KNOWN_SIGNUP[domain] || ('https://www.'+domain+paths[0]);
+
+    subResults[i]={domain:domain,email:email,url:url,status:'working',label:'Opening...'};
+    subRenderRow(i);
+
+    document.getElementById('subProgFill').style.width = Math.round((i/domains.length)*100)+'%';
+    document.getElementById('subProgCount').textContent = i+'/'+domains.length;
+    document.getElementById('subProgLabel').textContent = 'Opening: '+domain;
+
+    var opened = false;
+    try {
+      window.open(url,'_blank','noopener');
+      opened=true;
+      subOk++;
+      subResults[i].status='opened';
+      subResults[i].label='Opened ↗';
+      log('subLog','Opened: '+url,'ok');
+    } catch(e) {
+      subFail++;
+      subResults[i].status='blocked';
+      subResults[i].label='Popup Blocked';
+      log('subLog','Blocked: '+domain,'err');
+    }
+    subRenderRow(i);
+    subUpdateStats();
+
+    if(mode==='stagger') {
+      setTimeout(function(){processOne(i+1);},600);
+    } else if(mode==='all') {
+      processOne(i+1);
+    } else {
+      if(i<domains.length-1){
+        if(confirm('Opened '+domain+'.\n\nOpen next: '+domains[i+1]+'?')){processOne(i+1);}
+        else{subFinish();}
+      } else {subFinish();}
+    }
+  }
+
+  if(mode==='all') {
+    domains.forEach(function(domain,i){
+      var email=pickEmail(i);
+      var url=KNOWN_SIGNUP[domain]||('https://www.'+domain+paths[0]);
+      subResults[i]={domain:domain,email:email,url:url,status:'working',label:'Opening...'};
+      subRenderRow(i);
+      try{window.open(url,'_blank','noopener');subOk++;subResults[i].status='opened';subResults[i].label='Opened ↗';log('subLog','Opened: '+url,'ok');}
+      catch(e){subFail++;subResults[i].status='blocked';subResults[i].label='Blocked';log('subLog','Blocked: '+domain,'err');}
+      subRenderRow(i);
+    });
+    subUpdateStats();
+    subFinish();
+  } else {
+    processOne(0);
+  }
+}
+
+function subRenderRow(i) {
+  var r = subResults[i];
+  var body = document.getElementById('subResultsBody');
+  var badgeCls = r.status==='opened'?'bg-green':r.status==='blocked'?'bg-red':'bg-yellow';
+  var icon = r.status==='opened'?'↗':r.status==='blocked'?'✗':'…';
+  var safeUrl = (r.url||'').replace(/'/g,'%27');
+  var html = '<td style="font-family:var(--mono);font-size:11px;color:var(--muted)">'+(i+1)+'</td>'
+    +'<td class="td-domain">'+esc(r.domain)+'</td>'
+    +'<td style="font-family:var(--mono);font-size:11px">'+esc(r.email)+'</td>'
+    +'<td style="font-family:var(--mono);font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.url)+'</td>'
+    +'<td><span class="badge '+badgeCls+'">'+icon+' '+esc(r.label)+'</span></td>'
+    +'<td><button class="btn btn-sm btn-secondary" onclick="window.open(\''+safeUrl+'\',\'_blank\')">Open</button></td>';
+  var existing = document.getElementById('sub-row-'+i);
+  if(existing){existing.innerHTML=html;}
+  else{var tr=document.createElement('tr');tr.id='sub-row-'+i;tr.innerHTML=html;body.appendChild(tr);}
+  document.getElementById('subResultsWrap').style.display='block';
+}
+
+function subUpdateStats(){
+  document.getElementById('sub-ok').textContent=subOk;
+  document.getElementById('sub-pend').textContent=subPend;
+  document.getElementById('sub-fail').textContent=subFail;
+}
+
+function subFinish(){
+  document.getElementById('subProgFill').style.width='100%';
+  document.getElementById('subProgCount').textContent=subResults.length+'/'+subResults.length;
+  document.getElementById('subProgLabel').textContent='Complete!';
+  log('subLog','Done — '+subOk+' opened, '+subFail+' blocked','ok');
+
+  // Auto-retry blocked
+  if(document.getElementById('subRetry').checked && subFail>0){
+    setTimeout(function(){
+      subResults.forEach(function(r,i){
+        if(r.status==='blocked'){
+          setTimeout(function(){
+            try{window.open(r.url,'_blank','noopener');subResults[i].status='opened';subResults[i].label='Retry ↗';subOk++;subFail--;subRenderRow(i);subUpdateStats();log('subLog','Retry opened: '+r.domain,'ok');}
+            catch(e){}
+          },i*700);
+        }
+      });
+    },1500);
+  }
+}
+
+function subOpenBlocked(){
+  subResults.forEach(function(r,i){
+    if(r.status==='blocked'){setTimeout(function(){window.open(r.url,'_blank','noopener');},i*500);}
+  });
+}
+
+function subExportCSV(){
+  var rows=['Domain,Email,URL,Status'];
+  subResults.forEach(function(r){
+    rows.push([r.domain,r.email,r.url,r.label].map(function(v){return'"'+(v||'').replace(/"/g,'""')+'"';}).join(','));
+  });
+  downloadFile(rows.join('\n'),'subscriptions.csv','text/csv');
+}
+
+// ══════════════════════════════════════════════
+// DOMAIN MANAGER
+// ══════════════════════════════════════════════
+var domainList = [];
+
+function dmAddDomains(arr, source) {
+  var existing = new Set(domainList.map(function(d){return d.domain;}));
+  var added = 0;
+  arr.forEach(function(raw){
+    var d = raw.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/.*$/,'');
+    if(!d||d.indexOf('.')===-1) return;
+    if(existing.has(d)) return;
+    existing.add(d);
+    domainList.push({domain:d, source:source||'manual', added:new Date().toISOString()});
+    added++;
+  });
+  dmRender();
+  updateDMBadge();
+  return added;
+}
+
+function dmAdd() {
+  var raw = document.getElementById('dmAddInput').value.trim();
+  if(!raw) return;
+  var arr = raw.split(/[\n,\s]+/).map(function(d){return d.trim();}).filter(Boolean);
+  var n = dmAddDomains(arr, 'manual');
+  alert('Added '+n+' new domain(s). ('+(arr.length-n)+' duplicates skipped)');
+  document.getElementById('dmAddInput').value='';
+}
+
+function dmImportFile(){document.getElementById('dmFileInput').click();}
+function dmReadFile(e) {
+  var file = e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var lines = ev.target.result.split('\n');
+    var n = dmAddDomains(lines,'file:'+file.name);
+    alert('Imported '+n+' domains from '+file.name);
+  };
+  reader.readAsText(file);
+}
+
+function dmRender() {
+  var search = (document.getElementById('dmSearch').value||'').toLowerCase();
+  var tldF   = (document.getElementById('dmFilterTLD').value||'').replace('.','').toLowerCase();
+  var sort   = document.getElementById('dmSort').value;
+
+  var list = domainList.filter(function(item){
+    if(search && item.domain.indexOf(search)===-1) return false;
+    if(tldF){var parts=item.domain.split('.');if(parts[parts.length-1]!==tldF) return false;}
+    return true;
+  });
+
+  list = list.slice();
+  if(sort==='alpha') list.sort(function(a,b){return a.domain.localeCompare(b.domain);});
+  else if(sort==='zalpha') list.sort(function(a,b){return b.domain.localeCompare(a.domain);});
+  else if(sort==='tld') list.sort(function(a,b){
+    var ta=a.domain.split('.').pop(),tb=b.domain.split('.').pop();
+    return ta.localeCompare(tb)||a.domain.localeCompare(b.domain);
+  });
+  else list.sort(function(a,b){return new Date(b.added)-new Date(a.added);});
+
+  var tlds = new Set(domainList.map(function(d){return d.domain.split('.').pop();}));
+  document.getElementById('dm-total').textContent = domainList.length;
+  document.getElementById('dm-shown').textContent = list.length;
+  document.getElementById('dm-tlds').textContent  = tlds.size;
+
+  var tbody = document.getElementById('dmTableBody');
+  var empty = document.getElementById('dmEmpty');
+
+  if(!list.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+
+  tbody.innerHTML = list.map(function(item,i){
+    var tld = item.domain.split('.').pop();
+    var dateStr = item.added ? new Date(item.added).toLocaleDateString() : '—';
+    return '<tr>'
+      +'<td><input type="checkbox" class="dm-check" data-domain="'+esc(item.domain)+'" style="accent-color:var(--cyan)"></td>'
+      +'<td style="color:var(--muted);font-family:var(--mono);font-size:11px">'+(i+1)+'</td>'
+      +'<td class="td-domain">'+esc(item.domain)+'</td>'
+      +'<td><span class="badge bg-cyan">.'+esc(tld)+'</span></td>'
+      +'<td class="td-muted">'+dateStr+'</td>'
+      +'<td class="td-muted">'+esc(item.source)+'</td>'
+      +'<td style="display:flex;gap:4px">'
+      +'<button class="btn btn-xs btn-secondary" onclick="window.open(\'https://\'+\''+esc(item.domain)+'\',\'_blank\')">Visit</button>'
+      +'<button class="btn btn-xs btn-danger" onclick="dmRemove(\''+esc(item.domain)+'\')">✕</button>'
+      +'</td>'
+      +'</tr>';
+  }).join('');
+  updateDMBadge();
+}
+
+function dmRemove(domain){
+  domainList = domainList.filter(function(d){return d.domain!==domain;});
+  dmRender();
+  updateDMBadge();
+}
+
+function updateDMBadge(){
+  document.getElementById('dmBadge').textContent = domainList.length;
+}
+
+function dmToggleAll(cb){
+  document.querySelectorAll('.dm-check').forEach(function(c){c.checked=cb.checked;});
+}
+function dmSelectAll(){document.querySelectorAll('.dm-check').forEach(function(c){c.checked=true;});}
+function dmDeselectAll(){document.querySelectorAll('.dm-check').forEach(function(c){c.checked=false;});}
+
+function dmGetSelected(){
+  return Array.from(document.querySelectorAll('.dm-check:checked')).map(function(c){return c.dataset.domain;});
+}
+
+function dmExportSelected(){
+  var sel = dmGetSelected();
+  if(!sel.length){alert('Select at least one domain');return;}
+  downloadFile(sel.join('\n'),'domains-selected.txt','text/plain');
+}
+function dmExportAll(){downloadFile(domainList.map(function(d){return d.domain;}).join('\n'),'domains-all.txt','text/plain');}
+function dmExportCSV(){
+  var rows=['domain,tld,source,added'];
+  domainList.forEach(function(d){
+    rows.push([d.domain,d.domain.split('.').pop(),d.source,d.added].map(function(v){return'"'+(v||'')+'"';}).join(','));
+  });
+  downloadFile(rows.join('\n'),'domains-all.csv','text/csv');
+}
+function dmCopyAll(){copyText(domainList.map(function(d){return d.domain;}).join('\n'));alert('Copied '+domainList.length+' domains');}
+function dmDedup(){
+  var seen={};
+  domainList=domainList.filter(function(d){if(seen[d.domain])return false;seen[d.domain]=true;return true;});
+  dmRender();
+  alert('Deduplicated. '+domainList.length+' unique domains remain.');
+}
+function dmClearAll(){if(confirm('Clear all '+domainList.length+' domains?')){domainList=[];dmRender();}}
+
+// Load into textarea helper
+function loadFromManager(targetId) {
+  var el = document.getElementById(targetId);
+  if(!el||!domainList.length){alert('Domain Manager is empty.');return;}
+  el.value = domainList.map(function(d){return d.domain;}).join('\n');
+}
+
+// ══════════════════════════════════════════════
+// IP TOOLS
+// ══════════════════════════════════════════════
+function ipLookup() {
+  var val = document.getElementById('ipInput').value.trim();
+  if(!val){alert('Enter IP or domain');return;}
+  document.getElementById('ipResults').style.display='block';
+  document.getElementById('ipInfoOutput').textContent='Loading...';
+  document.getElementById('ipPTROutput').textContent='Loading...';
+
+  // IP info via ipapi
+  fetch('https://ipapi.co/'+encodeURIComponent(val)+'/json/')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var lines=[
+        'IP:          '+(d.ip||val),
+        'Hostname:    '+(d.org||'—'),
+        'City:        '+(d.city||'—'),
+        'Region:      '+(d.region||'—'),
+        'Country:     '+(d.country_name||'—')+' ('+(d.country||'—')+')',
+        'Postal:      '+(d.postal||'—'),
+        'Timezone:    '+(d.timezone||'—'),
+        'ISP/Org:     '+(d.org||'—'),
+        'ASN:         '+(d.asn||'—'),
+        'Lat/Lon:     '+(d.latitude||'—')+', '+(d.longitude||'—'),
+      ];
+      document.getElementById('ipInfoOutput').textContent=lines.join('\n');
+    })
+    .catch(function(){document.getElementById('ipInfoOutput').textContent='Could not fetch IP info (CORS or rate limit).\n\nTry: https://ipapi.co/'+val;});
+
+  // PTR via DNS
+  var isIP = /^\d+\.\d+\.\d+\.\d+$/.test(val);
+  if(isIP){
+    var rev = val.split('.').reverse().join('.')+'.in-addr.arpa';
+    dnsQ(rev,'PTR').then(function(recs){
+      if(recs.length){document.getElementById('ipPTROutput').textContent=recs.map(function(r){return r.data;}).join('\n');}
+      else{document.getElementById('ipPTROutput').textContent='No PTR record found for '+val;}
+    });
+  } else {
+    dnsQ(val,'A').then(function(recs){
+      var lines=recs.map(function(r){return r.data;});
+      document.getElementById('ipPTROutput').textContent=lines.length?'A records:\n'+lines.join('\n'):'No A records found';
+    });
+  }
+}
+
+function ipGetMine() {
+  fetch('https://ipapi.co/json/')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      document.getElementById('ipInput').value=d.ip||'';
+      ipLookup();
+    })
+    .catch(function(){alert('Could not detect IP');});
+}
+
+var DNSBL_LIST = [
+  'zen.spamhaus.org','bl.spamcop.net','dnsbl.sorbs.net',
+  'b.barracudacentral.org','dnsbl-1.uceprotect.net',
+  'spam.dnsbl.sorbs.net','dul.dnsbl.sorbs.net',
+  'psbl.surriel.com','ix.dnsbl.manitu.net',
+  'cbl.abuseat.org'
+];
+
+function blCheck() {
+  var ip = document.getElementById('blInput').value.trim();
+  if(!ip||!/^\d+\.\d+\.\d+\.\d+$/.test(ip)){alert('Enter a valid IPv4 address');return;}
+  var rev = ip.split('.').reverse().join('.');
+  document.getElementById('blResults').style.display='block';
+  document.getElementById('blResultsBody').innerHTML='<div style="font-family:var(--mono);color:var(--muted);padding:10px">Checking '+DNSBL_LIST.length+' blacklists...</div>';
+
+  var rows=[];
+  var done=0;
+
+  DNSBL_LIST.forEach(function(bl,i){
+    var query = rev+'.'+bl;
+    dnsQ(query,'A').then(function(recs){
+      var listed = recs.length>0;
+      rows[i]='<tr><td class="td-domain" style="color:var(--text)">'+esc(bl)+'</td>'
+        +'<td><span class="badge '+(listed?'bg-red':'bg-green')+'">'+(listed?'✗ LISTED':'✓ Clean')+'</span></td>'
+        +'<td style="font-family:var(--mono);font-size:11px;color:var(--muted)">'+(recs.length?recs.map(function(r){return esc(r.data);}).join(', '):'—')+'</td>'
+        +'</tr>';
+      done++;
+      if(done===DNSBL_LIST.length){
+        var listed_count = rows.filter(function(r){return r.indexOf('LISTED')>-1;}).length;
+        document.getElementById('blResultsBody').innerHTML=
+          '<div style="margin-bottom:12px"><span class="badge '+(listed_count?'bg-red':'bg-green')+'" style="font-size:13px;padding:6px 14px">'
+          +(listed_count?'⚠ Listed on '+listed_count+' blacklist(s)':'✓ Clean — not on any checked blacklist')+'</span></div>'
+          +'<div class="tbl-wrap"><table><thead><tr><th>Blacklist</th><th>Status</th><th>Response</th></tr></thead><tbody>'+rows.join('')+'</tbody></table></div>';
+      }
+    });
+  });
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+dmRender();
+ssStep(1);
+</script>
+</body>
+</html>
