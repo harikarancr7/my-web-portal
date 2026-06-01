@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Email Header Replacer</title>
+ 
+<style>
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        font-family:Arial, Helvetica, sans-serif;
+    }
+
+    body{
+        background:#111827;
+        color:white;
+        padding:40px;
+    }
+
+    .container{
+        max-width:1200px;
+        margin:auto;
+    }
+
+    h1{
+        margin-bottom:25px;
+        text-align:center;
+    }
+
+    .grid{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:20px;
+    }
+
+    .card{
+        background:#1f2937;
+        padding:20px;
+        border-radius:12px;
+    }
+
+    label{
+        display:block;
+        margin-top:15px;
+        margin-bottom:6px;
+        font-size:14px;
+    }
+
+    input, textarea{
+        width:100%;
+        padding:12px;
+        border:none;
+        border-radius:8px;
+        background:#374151;
+        color:white;
+        resize:vertical;
+    }
+
+    textarea{
+        min-height:500px;
+    }
+
+    button{
+        width:100%;
+        margin-top:20px;
+        padding:14px;
+        border:none;
+        border-radius:8px;
+        background:#2563eb;
+        color:white;
+        font-size:16px;
+        cursor:pointer;
+    }
+
+    button:hover{
+        background:#1d4ed8;
+    }
+
+    .download-btn{
+        background:#059669;
+    }
+
+    .download-btn:hover{
+        background:#047857;
+    }
+
+    @media(max-width:900px){
+        .grid{
+            grid-template-columns:1fr;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Email Header Replacer</h1>
+
+    <div class="grid">
+
+        <!-- LEFT -->
+        <div class="card">
+
+            <label>Subject</label>
+            <input type="text" id="sub" placeholder="New Subject">
+
+            <label>From Name</label>
+            <input type="text" id="fromName" placeholder="Company Name">
+
+            <label>List ID / Email</label>
+            <input type="text" id="listid" placeholder="offers@example.com">
+
+            <label>To</label>
+            <input type="text" id="to" placeholder="user@example.com">
+
+            <label>Date</label>
+            <input type="text" id="hdt" placeholder="Mon, 25 May 2026 18:06:40 +0530">
+
+            <label>Paste Email Content (.eml)</label>
+            <textarea id="input"></textarea>
+
+            <button onclick="processEmail()">Process Email</button>
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="card">
+
+            <label>Processed Output</label>
+            <textarea id="output"></textarea>
+
+            <button class="download-btn" onclick="downloadFile()">
+                Download output.eml
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function processEmail() {
+
+    let content = document.getElementById("input").value;
+
+    const sub = document.getElementById("sub").value;
+    const fromName = document.getElementById("fromName").value;
+    const listid = document.getElementById("listid").value;
+    const to = document.getElementById("to").value;
+    const hdt = document.getElementById("hdt").value;
+
+    // ====================================================
+    // HEADER REPLACEMENTS (MULTI-LINE SAFE)
+    // ====================================================
+
+    content = content.replace(
+        /^Subject:.*(?:\r?\n[ \t].+)*/mi,
+        `Subject: ${sub}`
+    );
+
+    content = content.replace(
+        /^From:.*(?:\r?\n[ \t].+)*/mi,
+        `From: ${fromName} <${listid}>`
+    );
+
+    content = content.replace(
+        /^To:.*(?:\r?\n[ \t].+)*/mi,
+        `To: ${to}`
+    );
+
+    content = content.replace(
+        /^Date:.*(?:\r?\n[ \t].+)*/mi,
+        `Date: ${hdt}`
+    );
+
+    // ====================================================
+    // CHECK CONTENT-TRANSFER-ENCODING
+    // ====================================================
+
+    const isBase64 = /Content-Transfer-Encoding:\s*base64/i.test(content);
+
+    // ====================================================
+    // SPLIT HEADERS & BODY
+    // ====================================================
+
+    let separator = "\r\n\r\n";
+
+    if (!content.includes(separator)) {
+        separator = "\n\n";
+    }
+
+    const parts = content.split(separator);
+
+    if (parts.length < 2) {
+        alert("Invalid email format");
+        return;
+    }
+
+    let headers = parts.shift();
+    let body = parts.join(separator);
+
+    // ====================================================
+    // IF BODY IS BASE64
+    // ====================================================
+
+    if (isBase64) {
+
+        try {
+
+            // remove line breaks
+            const cleanBase64 = body.replace(/\s+/g, "");
+
+            // decode base64
+            const decodedBody = atob(cleanBase64);
+
+            // replace style
+            let modifiedBody = decodedBody.replaceAll(
+                "</style>",
+                "</style><style>"
+            );
+
+            modifiedBody += "\n</style>";
+
+            // update encoding to 7bit
+            headers = headers.replace(
+                /Content-Transfer-Encoding:\s*base64/i,
+                "Content-Transfer-Encoding: 7bit"
+            );
+
+            // rebuild email
+            content = headers + separator + modifiedBody;
+
+        } catch (e) {
+
+            alert("Base64 decode failed");
+
+            return;
+        }
+
+    } else {
+
+        // ====================================================
+        // NORMAL BODY
+        // ====================================================
+
+        body = body.replaceAll(
+            "</style>",
+            "</style><style>"
+        );
+
+        body += "\n</style>";
+
+        content = headers + separator + body;
+    }
+
+    // ====================================================
+    // OUTPUT
+    // ====================================================
+
+    document.getElementById("output").value = content;
+}
+function downloadFile(){
+
+    const text = document.getElementById("output").value;
+
+    const blob = new Blob(
+        [text],
+        { type: "message/rfc822" }
+    );
+
+    const a = document.createElement("a");
+
+    a.href = URL.createObjectURL(blob);
+
+    a.download = "output.eml";
+
+    a.click();
+}
+
+</script>
+
+</body>
+</html>
