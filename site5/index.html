@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMARC Bulk Checker</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2330;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --warn: #ffbe0b;
+    --ok: #06d6a0;
+    --text: #e8eaf0;
+    --muted: #5a6070;
+    --card: #13161e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    padding: 2.5rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    flex-shrink: 0;
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  header h1 span { color: var(--accent); }
+
+  header p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-left: auto;
+    text-align: right;
+    line-height: 1.5;
+  }
+
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .input-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.8rem;
+    margin-bottom: 2rem;
+  }
+
+  .input-section label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    padding: 1rem;
+    resize: vertical;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+  }
+
+  textarea::placeholder { color: var(--muted); }
+
+  .btn-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  button {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 0.65rem 1.4rem;
+    transition: all 0.18s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-export {
+    background: transparent;
+    border: 1px solid var(--ok);
+    color: var(--ok);
+    margin-left: auto;
+  }
+  .btn-export:hover { background: rgba(6,214,160,0.1); }
+  .btn-export:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 99px;
+    margin-top: 1rem;
+    overflow: hidden;
+    display: none;
+  }
+  .progress-bar.active { display: block; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #7b2ff7);
+    border-radius: 99px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  .status-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+    min-height: 1.2em;
+  }
+
+  /* Summary Cards */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.2rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--accent); }
+  .stat-card .num {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .stat-card .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .c-total .num { color: var(--text); }
+  .c-none .num { color: var(--accent2); }
+  .c-quarantine .num { color: var(--warn); }
+  .c-reject .num { color: var(--ok); }
+  .c-error .num { color: var(--muted); }
+
+  /* Results table */
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .results-header h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .filter-tabs {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .tab:hover, .tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .tab.t-none.active { background: var(--accent2); border-color: var(--accent2); }
+  .tab.t-quarantine.active { background: var(--warn); border-color: var(--warn); color: #000; }
+  .tab.t-reject.active { background: var(--ok); border-color: var(--ok); color: #000; }
+
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  thead tr {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding: 0.85rem 1rem;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  td {
+    padding: 0.75rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    vertical-align: middle;
+  }
+
+  td.domain { font-weight: 600; color: var(--text); }
+  td.record {
+    color: var(--muted);
+    font-size: 0.72rem;
+    max-width: 380px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+  td.record:hover { color: var(--text); }
+
+  .badge {
+    display: inline-block;
+    padding: 0.22rem 0.65rem;
+    border-radius: 99px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .badge-none    { background: rgba(255,77,109,0.15); color: var(--accent2); border: 1px solid rgba(255,77,109,0.3); }
+  .badge-quarantine { background: rgba(255,190,11,0.12); color: var(--warn); border: 1px solid rgba(255,190,11,0.3); }
+  .badge-reject  { background: rgba(6,214,160,0.12); color: var(--ok); border: 1px solid rgba(6,214,160,0.3); }
+  .badge-error   { background: rgba(90,96,112,0.15); color: var(--muted); border: 1px solid rgba(90,96,112,0.3); }
+  .badge-checking { background: rgba(0,229,255,0.08); color: var(--accent); border: 1px solid rgba(0,229,255,0.2); animation: blink 1s infinite; }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+  .empty-state p { font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; }
+
+  .flagged-section {
+    margin-top: 2.5rem;
+    background: rgba(255,77,109,0.04);
+    border: 1px solid rgba(255,77,109,0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .flagged-section h3 {
+    color: var(--accent2);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .flagged-domains {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .domain-pill {
+    background: rgba(255,77,109,0.1);
+    border: 1px solid rgba(255,77,109,0.25);
+    border-radius: 6px;
+    padding: 0.3rem 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text);
+  }
+
+  .domain-pill.warn {
+    background: rgba(255,190,11,0.08);
+    border-color: rgba(255,190,11,0.2);
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  @media (max-width: 600px) {
+    header { flex-wrap: wrap; }
+    header p { margin-left: 0; text-align: left; width: 100%; }
+    td.record { max-width: 160px; }
+    .btn-export { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"></div>
+  <h1>DMARC <span>Bulk</span> Checker</h1>
+  <p>Paste domains → check records<br>DNS via Google DoH</p>
+</header>
+
+<main>
+  <div class="input-section">
+    <label>📋 Paste Domains (one per line)</label>
+    <textarea id="domainInput" placeholder="example.com&#10;google.com&#10;microsoft.com&#10;yourdomain.com"></textarea>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="startCheck()">⚡ Check DMARC</button>
+      <button class="btn-secondary" onclick="loadSample()">Load Sample</button>
+      <button class="btn-secondary" onclick="clearAll()">Clear</button>
+      <button class="btn-export" id="exportBtn" onclick="exportCSV()" disabled>⬇ Export CSV</button>
+    </div>
+    <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="status-line" id="statusLine"></div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary" id="summary" style="display:none">
+    <div class="stat-card c-total"><div class="num" id="s-total">0</div><div class="label">Total Checked</div></div>
+    <div class="stat-card c-none"><div class="num" id="s-none">0</div><div class="label">No DMARC ⚠️</div></div>
+    <div class="stat-card c-quarantine"><div class="num" id="s-quarantine">0</div><div class="label">Quarantine 🔶</div></div>
+    <div class="stat-card c-reject"><div class="num" id="s-reject">0</div><div class="label">Reject ✅</div></div>
+    <div class="stat-card c-error"><div class="num" id="s-error">0</div><div class="label">Error / Other</div></div>
+  </div>
+
+  <!-- Results table -->
+  <div id="resultsSection" style="display:none">
+    <div class="results-header">
+      <h2>Results</h2>
+      <div class="filter-tabs">
+        <button class="tab active" onclick="filterResults('all', this)">All</button>
+        <button class="tab t-none" onclick="filterResults('none', this)">No DMARC</button>
+        <button class="tab t-quarantine" onclick="filterResults('quarantine', this)">Quarantine</button>
+        <button class="tab t-reject" onclick="filterResults('reject', this)">Reject</button>
+        <button class="tab" onclick="filterResults('error', this)">Error</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Domain</th>
+            <th>Policy</th>
+            <th>DMARC Record</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none">
+        <div class="icon">🔍</div>
+        <p>No results match this filter.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flagged Domains -->
+  <div class="flagged-section" id="flaggedSection" style="display:none">
+    <h3>🚨 Action Required — No DMARC or Quarantine Domains</h3>
+    <div class="flagged-domains" id="flaggedList"></div>
+  </div>
+</main>
+
+<footer>
+  DMARC Bulk Checker · DNS via dns.google/resolve · No data stored · Open source tool
+</footer>
+
+<script>
+  let allResults = [];
+  let currentFilter = 'all';
+
+  const SAMPLE = `google.com\nmicrosoft.com\ngithub.com\nfacebook.com\nexample.com\nyahoo.com`;
+
+  function loadSample() {
+    document.getElementById('domainInput').value = SAMPLE;
+  }
+
+  function clearAll() {
+    document.getElementById('domainInput').value = '';
+    document.getElementById('summary').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('flaggedSection').style.display = 'none';
+    document.getElementById('statusLine').textContent = '';
+    document.getElementById('progressBar').classList.remove('active');
+    document.getElementById('exportBtn').disabled = true;
+    allResults = [];
+  }
+
+  async function checkDMARC(domain) {
+    const dmarcDomain = `_dmarc.${domain.trim()}`;
+    const url = `https://dns.google/resolve?name=${encodeURIComponent(dmarcDomain)}&type=TXT`;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.Answer) {
+        for (const ans of data.Answer) {
+          if (ans.data && ans.data.includes('v=DMARC1')) {
+            return ans.data.replace(/"/g, '');
+          }
+        }
+        return 'No DMARC record found';
+      } else {
+        return 'No TXT records at _dmarc';
+      }
+    } catch (e) {
+      return 'Error: ' + e.toString();
+    }
+  }
+
+  function getPolicy(record) {
+    if (record.startsWith('Error:')) return 'error';
+    if (record === 'No DMARC record found' || record === 'No TXT records at _dmarc') return 'none';
+    const m = record.match(/p=([a-z]+)/i);
+    if (!m) return 'none';
+    const p = m[1].toLowerCase();
+    if (p === 'reject') return 'reject';
+    if (p === 'quarantine') return 'quarantine';
+    if (p === 'none') return 'none';
+    return 'none';
+  }
+
+  function badgeHTML(policy) {
+    const labels = { none: 'No DMARC', quarantine: 'Quarantine', reject: 'Reject', error: 'Error', checking: '…' };
+    return `<span class="badge badge-${policy}">${labels[policy] || policy}</span>`;
+  }
+
+  async function startCheck() {
+    const raw = document.getElementById('domainInput').value.trim();
+    if (!raw) { alert('Please enter at least one domain.'); return; }
+
+    const domains = [...new Set(raw.split('\n').map(d => d.trim().toLowerCase().replace(/^https?:\/\//,'')).filter(Boolean))];
+    if (domains.length === 0) return;
+
+    allResults = [];
+    document.getElementById('summary').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('flaggedSection').style.display = 'none';
+    document.getElementById('exportBtn').disabled = true;
+
+    const pb = document.getElementById('progressBar');
+    const pf = document.getElementById('progressFill');
+    const sl = document.getElementById('statusLine');
+    pb.classList.add('active');
+    pf.style.width = '0%';
+
+    // Pre-populate table with "checking" rows
+    document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('summary').style.display = 'grid';
+    renderTable();
+
+    for (let i = 0; i < domains.length; i++) {
+      const domain = domains[i];
+      sl.textContent = `Checking ${domain} (${i+1}/${domains.length})…`;
+      allResults.push({ domain, record: 'checking', policy: 'checking', index: i+1 });
+      renderTable();
+
+      const record = await checkDMARC(domain);
+      const policy = getPolicy(record);
+      allResults[i] = { domain, record, policy, index: i+1 };
+
+      pf.style.width = `${Math.round(((i+1)/domains.length)*100)}%`;
+      renderTable();
+      updateSummary();
+    }
+
+    sl.textContent = `✅ Done! Checked ${domains.length} domain${domains.length>1?'s':''}.`;
+    document.getElementById('exportBtn').disabled = false;
+    renderFlagged();
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('resultsBody');
+    const filtered = currentFilter === 'all'
+      ? allResults
+      : allResults.filter(r => r.policy === currentFilter);
+
+    const emptyState = document.getElementById('emptyState');
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '';
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    tbody.innerHTML = filtered.map(r => `
+      <tr>
+        <td style="color:var(--muted);width:40px">${r.index}</td>
+        <td class="domain">${escapeHTML(r.domain)}</td>
+        <td>${badgeHTML(r.policy)}</td>
+        <td class="record" title="${escapeHTML(r.record)}">${escapeHTML(r.record)}</td>
+      </tr>
+    `).join('');
+  }
+
+  function updateSummary() {
+    const counts = { total: allResults.filter(r=>r.policy!=='checking').length, none: 0, quarantine: 0, reject: 0, error: 0 };
+    for (const r of allResults) {
+      if (r.policy === 'none') counts.none++;
+      else if (r.policy === 'quarantine') counts.quarantine++;
+      else if (r.policy === 'reject') counts.reject++;
+      else if (r.policy === 'error') counts.error++;
+    }
+    document.getElementById('s-total').textContent = counts.total;
+    document.getElementById('s-none').textContent = counts.none;
+    document.getElementById('s-quarantine').textContent = counts.quarantine;
+    document.getElementById('s-reject').textContent = counts.reject;
+    document.getElementById('s-error').textContent = counts.error;
+  }
+
+  function renderFlagged() {
+    const flagged = allResults.filter(r => r.policy === 'none' || r.policy === 'quarantine');
+    const section = document.getElementById('flaggedSection');
+    const list = document.getElementById('flaggedList');
+    if (flagged.length === 0) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    list.innerHTML = flagged.map(r =>
+      `<span class="domain-pill ${r.policy === 'quarantine' ? 'warn' : ''}">${escapeHTML(r.domain)}</span>`
+    ).join('');
+  }
+
+  function filterResults(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable();
+  }
+
+  function exportCSV() {
+    if (allResults.length === 0) return;
+    const header = 'Domain,Policy,DMARC Record\n';
+    const rows = allResults.map(r => `"${r.domain}","${r.policy}","${r.record.replace(/"/g,'""')}"`).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'dmarc_results.csv';
+    a.click();
+  }
+
+  function escapeHTML(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>
