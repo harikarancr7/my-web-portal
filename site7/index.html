@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InboxRadar — Live Domain Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060810;
+    --surface: #0d1117;
+    --card: #111827;
+    --border: #1f2937;
+    --accent: #00ff9d;
+    --accent2: #00cfff;
+    --accent3: #ff6b35;
+    --warn: #fbbf24;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --good: #10b981;
+    --med: #f59e0b;
+    --bad: #ef4444;
+    --font-mono: 'Space Mono', monospace;
+    --font-sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid bg */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(0,255,157,0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0,255,157,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+  /* Header */
+  header {
+    padding: 24px 0 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px;
+  }
+  .logo-mark {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: #000;
+  }
+  .logo-text { display: flex; flex-direction: column; }
+  .logo-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo-title span { color: var(--accent); }
+  .logo-sub { font-size: 11px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 2px; text-transform: uppercase; }
+  .header-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 12px; background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.3); border-radius: 20px;
+    font-size: 11px; font-family: var(--font-mono); color: var(--good);
+  }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+
+  /* Controls */
+  .controls {
+    padding: 24px 0;
+    display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end;
+  }
+  .ctrl-group { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 11px; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  input, select, textarea {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-mono); font-size: 13px;
+    padding: 10px 14px; border-radius: 8px; outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  select option { background: var(--card); }
+
+  .btn {
+    padding: 11px 22px; border-radius: 8px; border: none; cursor: pointer;
+    font-family: var(--font-sans); font-weight: 700; font-size: 14px;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000;
+  }
+  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-secondary {
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+  }
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+  .btn-danger { background: rgba(239,68,68,0.15); border: 1px solid var(--danger); color: var(--danger); }
+  .btn-danger:hover { background: rgba(239,68,68,0.25); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; padding-top: 8px; }
+  .tab {
+    padding: 8px 18px; border-radius: 6px 6px 0 0;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    color: var(--muted); border: 1px solid transparent;
+    border-bottom: none; transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-color: var(--border); background: var(--card); border-bottom: 1px solid var(--card); margin-bottom: -1px; }
+
+  /* Input area for manual domains */
+  .domain-input-area { margin-bottom: 16px; }
+  .domain-input-area textarea { width: 100%; min-height: 80px; resize: vertical; }
+
+  /* Stats bar */
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; text-align: center;
+  }
+  .stat-num { font-size: 22px; font-weight: 800; font-family: var(--font-mono); }
+  .stat-lbl { font-size: 10px; color: var(--muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+  .stat-green .stat-num { color: var(--good); }
+  .stat-yellow .stat-num { color: var(--med); }
+  .stat-red .stat-num { color: var(--bad); }
+  .stat-blue .stat-num { color: var(--accent2); }
+  .stat-acc .stat-num { color: var(--accent); }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center;
+  }
+  .filter-bar input { flex: 1; min-width: 180px; }
+  .filter-chip {
+    padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+    background: var(--card); font-size: 12px; cursor: pointer;
+    font-family: var(--font-mono); color: var(--muted); transition: all 0.15s;
+  }
+  .filter-chip:hover, .filter-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(0,255,157,0.05); }
+
+  /* Sort bar */
+  .sort-bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; font-size: 12px; color: var(--muted); }
+  .sort-btn {
+    padding: 4px 12px; border-radius: 4px; border: 1px solid var(--border);
+    background: none; color: var(--muted); font-size: 11px; font-family: var(--font-mono);
+    cursor: pointer; transition: all 0.1s;
+  }
+  .sort-btn:hover, .sort-btn.active { color: var(--accent2); border-color: var(--accent2); }
+
+  /* Progress */
+  .progress-wrap { margin-bottom: 20px; }
+  .progress-bar-bg { background: var(--card); border-radius: 4px; height: 4px; overflow: hidden; border: 1px solid var(--border); }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 4px; transition: width 0.3s; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-mono); color: var(--muted); margin-top: 4px; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th {
+    background: var(--card); padding: 10px 12px; text-align: left;
+    font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--muted); border-bottom: 1px solid var(--border);
+    white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  thead th:hover { color: var(--accent); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td { padding: 9px 12px; vertical-align: middle; }
+  .domain-cell { font-family: var(--font-mono); font-weight: 700; color: var(--text); font-size: 13px; }
+  .rank-cell { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+
+  /* Badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 4px; font-size: 10px; font-family: var(--font-mono);
+    font-weight: 700; white-space: nowrap;
+  }
+  .badge-none { background: rgba(239,68,68,0.15); color: var(--bad); border: 1px solid rgba(239,68,68,0.3); }
+  .badge-quarantine { background: rgba(251,191,36,0.12); color: var(--warn); border: 1px solid rgba(251,191,36,0.3); }
+  .badge-reject { background: rgba(16,185,129,0.12); color: var(--good); border: 1px solid rgba(16,185,129,0.3); }
+  .badge-none2 { background: rgba(100,116,139,0.15); color: var(--muted); border: 1px solid rgba(100,116,139,0.3); }
+  .badge-live { background: rgba(16,185,129,0.12); color: var(--good); border: 1px solid rgba(16,185,129,0.3); }
+  .badge-dead { background: rgba(239,68,68,0.12); color: var(--bad); border: 1px solid rgba(239,68,68,0.3); }
+  .badge-outlook { background: rgba(0,207,255,0.1); color: var(--accent2); border: 1px solid rgba(0,207,255,0.3); }
+  .badge-google { background: rgba(66,133,244,0.1); color: #4285f4; border: 1px solid rgba(66,133,244,0.3); }
+  .badge-generic { background: rgba(100,116,139,0.1); color: var(--muted); border: 1px solid rgba(100,116,139,0.3); }
+
+  /* Score bar */
+  .score-bar-wrap { display: flex; align-items: center; gap: 6px; }
+  .score-num { font-family: var(--font-mono); font-size: 12px; min-width: 24px; font-weight: 700; }
+  .score-bar { height: 5px; border-radius: 3px; background: var(--border); flex: 1; min-width: 40px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 3px; }
+
+  /* Priority score cell */
+  .priority-cell { font-family: var(--font-mono); font-size: 14px; font-weight: 800; }
+  .priority-a { color: var(--good); }
+  .priority-b { color: var(--med); }
+  .priority-c { color: var(--bad); }
+
+  /* Ping cell */
+  .ping-cell { font-family: var(--font-mono); font-size: 12px; }
+  .ping-fast { color: var(--good); }
+  .ping-med { color: var(--warn); }
+  .ping-slow { color: var(--bad); }
+
+  /* MX cell */
+  .mx-cell { font-family: var(--font-mono); font-size: 10px; color: var(--muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Inbox score cell */
+  .inbox-meter { display: flex; align-items: center; gap: 8px; }
+  .inbox-score-num { font-family: var(--font-mono); font-weight: 800; font-size: 15px; }
+  .inbox-dots { display: flex; gap: 3px; }
+  .inbox-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* AI panel */
+  .ai-panel {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px;
+  }
+  .ai-panel h3 { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .ai-input-row { display: flex; gap: 10px; }
+  .ai-input-row input { flex: 1; }
+  .ai-log {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+    max-height: 160px; overflow-y: auto; margin-top: 12px; white-space: pre-wrap;
+    line-height: 1.6;
+  }
+  .ai-log .log-ok { color: var(--good); }
+  .ai-log .log-info { color: var(--accent2); }
+  .ai-log .log-warn { color: var(--warn); }
+
+  /* MOZ key row */
+  .api-keys-row {
+    display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;
+    margin-bottom: 16px; padding: 14px; background: rgba(0,207,255,0.04);
+    border: 1px solid rgba(0,207,255,0.15); border-radius: 10px;
+  }
+  .api-keys-row label { font-size: 10px; }
+
+  /* Export row */
+  .action-row { display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
+
+  /* Spinner */
+  .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+  @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+  /* Tooltip */
+  [data-tip] { position: relative; cursor: help; }
+  [data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%);
+    background: #1e293b; border: 1px solid var(--border); color: var(--text);
+    padding: 4px 10px; border-radius: 6px; font-size: 11px; font-family: var(--font-mono);
+    white-space: nowrap; z-index: 99; pointer-events: none;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--muted);
+    font-family: var(--font-mono); font-size: 13px;
+  }
+  .empty-state .big { font-size: 42px; display: block; margin-bottom: 12px; }
+
+  /* Log detail drawer */
+  .detail-row td {
+    background: rgba(0,0,0,0.3); padding: 10px 20px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--muted); line-height: 1.7;
+  }
+
+  /* Mobile */
+  @media(max-width:900px){
+    .controls { grid-template-columns: 1fr 1fr; }
+    .stats-bar { grid-template-columns: repeat(4,1fr); }
+  }
+  @media(max-width:600px){
+    .controls { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="logo-mark">IR</div>
+    <div class="logo-text">
+      <div class="logo-title">Inbox<span>Radar</span></div>
+      <div class="logo-sub">Live Domain Intelligence Platform</div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge"><span class="live-dot"></span> REAL DNS LIVE</div>
+    </div>
+  </header>
+
+  <!-- MOZ API Keys -->
+  <div style="padding-top:18px;">
+    <div class="api-keys-row">
+      <div class="ctrl-group">
+        <label>MOZ Access ID (optional)</label>
+        <input id="mozAccessId" type="text" placeholder="mozscape-xxxxxxxx">
+      </div>
+      <div class="ctrl-group">
+        <label>MOZ Secret Key (optional)</label>
+        <input id="mozSecret" type="password" placeholder="••••••••••••••••">
+      </div>
+      <button class="btn btn-secondary" onclick="saveMozKeys()">Save Keys</button>
+    </div>
+  </div>
+
+  <!-- AI Scraper panel -->
+  <div class="ai-panel">
+    <h3>⚡ AI Domain Scout <span style="color:var(--muted);font-size:11px;font-weight:400">— Auto-discover inbox-friendly domains</span></h3>
+    <div class="ai-input-row">
+      <input id="aiNiche" type="text" placeholder="Niche or industry (e.g. 'SaaS tools', 'email marketing', 'crypto')" />
+      <input id="aiCount" type="number" value="20" min="5" max="50" style="width:90px" />
+      <button class="btn btn-primary" id="aiScrapeBtn" onclick="aiScrape()">🤖 Scout Domains</button>
+    </div>
+    <div class="ai-log" id="aiLog">// AI Agent ready — enter a niche and click Scout Domains
+// Real domains will be discovered and queued for DNS analysis...</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('manual')">Manual Input</div>
+    <div class="tab" onclick="switchTab('results')">Results <span id="tabCount" style="color:var(--accent);font-family:var(--font-mono)"></span></div>
+    <div class="tab" onclick="switchTab('inbox')">🎯 Inbox Picks</div>
+  </div>
+
+  <!-- Manual tab -->
+  <div id="tab-manual">
+    <div class="domain-input-area">
+      <label>Paste domains (one per line or comma-separated)</label>
+      <textarea id="domainInput" rows="5" placeholder="example.com&#10;newsletter.io&#10;bulkmailer.net"></textarea>
+    </div>
+    <div class="controls">
+      <div class="ctrl-group">
+        <label>Concurrent Workers</label>
+        <select id="concurrency">
+          <option value="3">3 (safe)</option>
+          <option value="5" selected>5 (fast)</option>
+          <option value="10">10 (aggressive)</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>Min DA Filter</label>
+        <input id="minDA" type="number" value="0" min="0" max="100" />
+      </div>
+      <div class="ctrl-group">
+        <label>DMARC Filter</label>
+        <select id="dmarcFilter">
+          <option value="all">All policies</option>
+          <option value="none">none only</option>
+          <option value="quarantine">quarantine only</option>
+          <option value="none,quarantine">none + quarantine</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="scanBtn" onclick="startScan()">▶ Scan Domains</button>
+    </div>
+  </div>
+
+  <!-- Results tab -->
+  <div id="tab-results" style="display:none">
+    <!-- Progress -->
+    <div class="progress-wrap" id="progressWrap" style="display:none">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-label">
+        <span id="progressLabel">Scanning...</span>
+        <span id="progressPct">0%</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-card stat-acc"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Total</div></div>
+      <div class="stat-card stat-green"><div class="stat-num" id="statLive">0</div><div class="stat-lbl">Live</div></div>
+      <div class="stat-card stat-yellow"><div class="stat-num" id="statNone">0</div><div class="stat-lbl">DMARC None</div></div>
+      <div class="stat-card stat-yellow"><div class="stat-num" id="statQuar">0</div><div class="stat-lbl">Quarantine</div></div>
+      <div class="stat-card stat-blue"><div class="stat-num" id="statOutlook">0</div><div class="stat-lbl">Outlook MX</div></div>
+      <div class="stat-card stat-blue"><div class="stat-num" id="statGoogle">0</div><div class="stat-lbl">Google MX</div></div>
+      <div class="stat-card stat-green"><div class="stat-num" id="statInbox">0</div><div class="stat-lbl">Inbox Ready</div></div>
+    </div>
+
+    <!-- Action row -->
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn btn-secondary" onclick="exportJSON()">⬇ Export JSON</button>
+      <button class="btn btn-danger" onclick="clearResults()">✕ Clear</button>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <input id="filterSearch" type="text" placeholder="🔍 Filter domain..." oninput="renderTable()" style="max-width:220px">
+      <span class="filter-chip active" data-filter="all" onclick="setChip(this,'all')">All</span>
+      <span class="filter-chip" data-filter="live" onclick="setChip(this,'live')">🟢 Live</span>
+      <span class="filter-chip" data-filter="dmarc_none" onclick="setChip(this,'dmarc_none')">🔴 DMARC None</span>
+      <span class="filter-chip" data-filter="quarantine" onclick="setChip(this,'quarantine')">🟡 Quarantine</span>
+      <span class="filter-chip" data-filter="outlook" onclick="setChip(this,'outlook')">📧 Outlook</span>
+      <span class="filter-chip" data-filter="google" onclick="setChip(this,'google')">📬 Google</span>
+      <span class="filter-chip" data-filter="inbox_ready" onclick="setChip(this,'inbox_ready')">🎯 Inbox Ready</span>
+    </div>
+
+    <!-- Sort -->
+    <div class="sort-bar">
+      Sort by:
+      <button class="sort-btn active" id="sort-priority" onclick="setSortBy('priority')">Priority ↓</button>
+      <button class="sort-btn" id="sort-da" onclick="setSortBy('da')">DA</button>
+      <button class="sort-btn" id="sort-ping" onclick="setSortBy('ping')">Ping</button>
+      <button class="sort-btn" id="sort-inbox" onclick="setSortBy('inbox')">Inbox Score</button>
+      <button class="sort-btn" id="sort-domain" onclick="setSortBy('domain')">Domain A-Z</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table id="resultsTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Domain</th>
+            <th>Live</th>
+            <th>Ping</th>
+            <th>DMARC</th>
+            <th>MX Provider</th>
+            <th>MX Host</th>
+            <th>DA</th>
+            <th>PA</th>
+            <th>SS</th>
+            <th>Inbox Score</th>
+            <th>Priority</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="13"><div class="empty-state"><span class="big">📡</span>No domains scanned yet.<br>Paste domains or use the AI Scout above.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Inbox picks tab -->
+  <div id="tab-inbox" style="display:none">
+    <div id="inboxPicksContent">
+      <div class="empty-state"><span class="big">🎯</span>Scan domains first to see inbox-ready picks.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let results = {};
+let sortBy = 'priority';
+let activeFilter = 'all';
+let activeTab = 'manual';
+let mozAccessId = '';
+let mozSecret = '';
+let scanning = false;
+
+// ============================================================
+// HELPERS
+// ============================================================
+function saveMozKeys() {
+  mozAccessId = document.getElementById('mozAccessId').value.trim();
+  mozSecret = document.getElementById('mozSecret').value.trim();
+  alert(mozAccessId ? '✅ MOZ keys saved for this session.' : '⚠️ No MOZ keys entered — DA/PA will show N/A');
+}
+
+function switchTab(t) {
+  activeTab = t;
+  ['manual','results','inbox'].forEach(x => {
+    document.getElementById('tab-'+x).style.display = x===t?'block':'none';
+    document.querySelectorAll('.tab').forEach((el,i) => {
+      if(['manual','results','inbox'][i]===t) el.classList.add('active');
+      else el.classList.remove('active');
+    });
+  });
+  if(t==='results') renderTable();
+  if(t==='inbox') renderInboxPicks();
+}
+
+function setChip(el, filter) {
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter = filter;
+  renderTable();
+}
+
+function setSortBy(s) {
+  sortBy = s;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sort-'+s).classList.add('active');
+  renderTable();
+}
+
+function log(msg, cls='') {
+  const el = document.getElementById('aiLog');
+  el.innerHTML += `<span class="${cls?'log-'+cls:''}">${msg}</span>\n`;
+  el.scrollTop = el.scrollHeight;
+}
+
+// ============================================================
+// REAL DNS LOOKUPS via dns.google JSON API
+// ============================================================
+async function lookupDNS(domain, type) {
+  try {
+    const r = await fetch(`https://dns.google/resolve?name=${domain}&type=${type}`);
+    const data = await r.json();
+    return data;
+  } catch(e) { return null; }
+}
+
+async function getDMARC(domain) {
+  const data = await lookupDNS(`_dmarc.${domain}`, 'TXT');
+  if (!data || !data.Answer) return { policy: 'missing', raw: '' };
+  for (const ans of data.Answer) {
+    const txt = (ans.data || '').replace(/"/g,'');
+    if (txt.startsWith('v=DMARC1')) {
+      const match = txt.match(/p=([^;]+)/i);
+      const policy = match ? match[1].trim().toLowerCase() : 'none';
+      return { policy, raw: txt };
+    }
+  }
+  return { policy: 'missing', raw: '' };
+}
+
+async function getMX(domain) {
+  const data = await lookupDNS(domain, 'MX');
+  if (!data || !data.Answer) return [];
+  return data.Answer
+    .filter(a => a.type === 15)
+    .map(a => {
+      const parts = a.data.trim().split(' ');
+      return { priority: parseInt(parts[0])||10, host: parts[1]||'' };
+    })
+    .sort((a,b)=>a.priority-b.priority);
+}
+
+function detectMXProvider(mxHosts) {
+  if (!mxHosts || mxHosts.length===0) return 'none';
+  const h = mxHosts[0].host.toLowerCase();
+  if (h.includes('outlook') || h.includes('microsoft') || h.includes('protection.outlook')) return 'outlook';
+  if (h.includes('google') || h.includes('googlemail') || h.includes('gmail') || h.includes('aspmx')) return 'google';
+  if (h.includes('mxroute') || h.includes('mailchannels') || h.includes('sendgrid')) return 'bulk';
+  if (h.includes('protonmail') || h.includes('proton.me')) return 'proton';
+  if (h.includes('zoho')) return 'zoho';
+  return 'other';
+}
+
+// ============================================================
+// REAL PING via fetch with timing
+// ============================================================
+async function pingDomain(domain) {
+  const url = `https://${domain}/favicon.ico`;
+  const t0 = performance.now();
+  try {
+    await fetch(url, { mode:'no-cors', cache:'no-store', signal: AbortSignal.timeout(5000) });
+    return { live: true, ms: Math.round(performance.now() - t0) };
+  } catch(e) {
+    // Try HTTP
+    try {
+      const t1 = performance.now();
+      await fetch(`http://${domain}`, { mode:'no-cors', cache:'no-store', signal: AbortSignal.timeout(4000) });
+      return { live: true, ms: Math.round(performance.now() - t1) };
+    } catch(e2) {
+      return { live: false, ms: null };
+    }
+  }
+}
+
+// ============================================================
+// MOZ API (real — needs your key)
+// ============================================================
+async function getMOZ(domain) {
+  if (!mozAccessId || !mozSecret) return { da:null, pa:null, ss:null, tb:null, qb:null };
+  try {
+    // MOZ Link Explorer free endpoint
+    const endpoint = 'https://lsapi.seomoz.com/v2/url_metrics';
+    const auth = btoa(`${mozAccessId}:${mozSecret}`);
+    const r = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targets: [`https://${domain}`] })
+    });
+    if (!r.ok) return { da:null, pa:null, ss:null, tb:null, qb:null };
+    const data = await r.json();
+    const m = data.results?.[0] || {};
+    return {
+      da: Math.round(m.domain_authority||0),
+      pa: Math.round(m.page_authority||0),
+      ss: Math.round(m.spam_score||0),
+      tb: m.root_domains_to_root_domain || 0,
+      qb: m.external_equity_links || 0
+    };
+  } catch(e) {
+    return { da:null, pa:null, ss:null, tb:null, qb:null };
+  }
+}
+
+// ============================================================
+// INBOX SCORE FORMULA (real logic)
+// ============================================================
+function computeInboxScore(row) {
+  let score = 0;
+  // DMARC policy
+  if (row.dmarc.policy === 'none') score += 30;
+  else if (row.dmarc.policy === 'quarantine') score += 20;
+  else if (row.dmarc.policy === 'reject') score += 5;
+  else score += 0; // missing = bad
+
+  // MX provider
+  if (row.mxProvider === 'outlook') score += 30; // Outlook = best inbox placement
+  else if (row.mxProvider === 'google') score += 25;
+  else if (row.mxProvider === 'other') score += 10;
+  else score += 0; // no MX = 0
+
+  // Live
+  if (row.ping.live) score += 15;
+
+  // Ping speed
+  if (row.ping.ms !== null) {
+    if (row.ping.ms < 300) score += 10;
+    else if (row.ping.ms < 800) score += 5;
+  }
+
+  // DA bonus (if MOZ available)
+  if (row.moz.da !== null) {
+    score += Math.min(15, Math.round(row.moz.da / 7));
+  }
+
+  return Math.min(100, score);
+}
+
+function priorityLabel(score) {
+  if (score >= 70) return { label: 'A+', cls: 'priority-a' };
+  if (score >= 50) return { label: 'B', cls: 'priority-b' };
+  return { label: 'C', cls: 'priority-c' };
+}
+
+function isInboxReady(row) {
+  return row.ping.live &&
+    (row.dmarc.policy === 'none' || row.dmarc.policy === 'quarantine') &&
+    (row.mxProvider === 'outlook' || row.mxProvider === 'google') &&
+    row.inboxScore >= 55;
+}
+
+// ============================================================
+// SCAN SINGLE DOMAIN
+// ============================================================
+async function scanDomain(domain) {
+  domain = domain.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*/,'');
+  if (!domain) return null;
+
+  const [dmarc, mxRaw, ping, moz] = await Promise.all([
+    getDMARC(domain),
+    getMX(domain),
+    pingDomain(domain),
+    getMOZ(domain)
+  ]);
+
+  const mxProvider = detectMXProvider(mxRaw);
+  const mxHost = mxRaw.length > 0 ? mxRaw[0].host : '';
+
+  const row = { domain, dmarc, mxRaw, mxProvider, mxHost, ping, moz };
+  row.inboxScore = computeInboxScore(row);
+  row.priority = priorityLabel(row.inboxScore);
+  row.inboxReady = isInboxReady(row);
+  return row;
+}
+
+// ============================================================
+// MAIN SCAN
+// ============================================================
+async function startScan() {
+  if (scanning) return;
+  const raw = document.getElementById('domainInput').value;
+  const domains = raw.split(/[\n,]+/).map(d=>d.trim()).filter(Boolean);
+  if (!domains.length) { alert('Enter at least one domain.'); return; }
+
+  scanning = true;
+  document.getElementById('scanBtn').disabled = true;
+  document.getElementById('scanBtn').textContent = '⏳ Scanning...';
+  switchTab('results');
+
+  const wrap = document.getElementById('progressWrap');
+  wrap.style.display = 'block';
+
+  const concurrency = parseInt(document.getElementById('concurrency').value);
+  let done = 0;
+
+  // Queue with concurrency
+  const queue = [...domains];
+  const inFlight = [];
+
+  async function runNext() {
+    if (!queue.length) return;
+    const d = queue.shift();
+    document.getElementById('progressLabel').textContent = `Scanning ${d}...`;
+    try {
+      const row = await scanDomain(d);
+      if (row) {
+        results[row.domain] = row;
+        updateStats();
+        renderTable();
+      }
+    } catch(e) {}
+    done++;
+    const pct = Math.round(done / domains.length * 100);
+    document.getElementById('progressFill').style.width = pct+'%';
+    document.getElementById('progressPct').textContent = pct+'%';
+    await runNext();
+  }
+
+  const workers = Array.from({length: Math.min(concurrency, domains.length)}, runNext);
+  await Promise.all(workers);
+
+  scanning = false;
+  document.getElementById('scanBtn').disabled = false;
+  document.getElementById('scanBtn').textContent = '▶ Scan Domains';
+  document.getElementById('progressLabel').textContent = `Done! ${domains.length} domains scanned.`;
+  updateTabCount();
+}
+
+// ============================================================
+// STATS
+// ============================================================
+function updateStats() {
+  const rows = Object.values(results);
+  document.getElementById('statTotal').textContent = rows.length;
+  document.getElementById('statLive').textContent = rows.filter(r=>r.ping.live).length;
+  document.getElementById('statNone').textContent = rows.filter(r=>r.dmarc.policy==='none').length;
+  document.getElementById('statQuar').textContent = rows.filter(r=>r.dmarc.policy==='quarantine').length;
+  document.getElementById('statOutlook').textContent = rows.filter(r=>r.mxProvider==='outlook').length;
+  document.getElementById('statGoogle').textContent = rows.filter(r=>r.mxProvider==='google').length;
+  document.getElementById('statInbox').textContent = rows.filter(r=>r.inboxReady).length;
+  updateTabCount();
+}
+
+function updateTabCount() {
+  const n = Object.keys(results).length;
+  document.getElementById('tabCount').textContent = n ? `(${n})` : '';
+}
+
+// ============================================================
+// RENDER TABLE
+// ============================================================
+function renderTable() {
+  let rows = Object.values(results);
+
+  // Filter
+  const search = document.getElementById('filterSearch')?.value?.toLowerCase()||'';
+  if (search) rows = rows.filter(r=>r.domain.includes(search));
+
+  const f = activeFilter;
+  if (f==='live') rows = rows.filter(r=>r.ping.live);
+  if (f==='dmarc_none') rows = rows.filter(r=>r.dmarc.policy==='none');
+  if (f==='quarantine') rows = rows.filter(r=>r.dmarc.policy==='quarantine');
+  if (f==='outlook') rows = rows.filter(r=>r.mxProvider==='outlook');
+  if (f==='google') rows = rows.filter(r=>r.mxProvider==='google');
+  if (f==='inbox_ready') rows = rows.filter(r=>r.inboxReady);
+
+  // Sort
+  if (sortBy==='priority') rows.sort((a,b)=>b.inboxScore-a.inboxScore);
+  if (sortBy==='da') rows.sort((a,b)=>(b.moz.da||0)-(a.moz.da||0));
+  if (sortBy==='ping') rows.sort((a,b)=>(a.ping.ms||9999)-(b.ping.ms||9999));
+  if (sortBy==='inbox') rows.sort((a,b)=>b.inboxScore-a.inboxScore);
+  if (sortBy==='domain') rows.sort((a,b)=>a.domain.localeCompare(b.domain));
+
+  const tbody = document.getElementById('tableBody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="13"><div class="empty-state"><span class="big">🔍</span>No matching domains.</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map((r, i) => {
+    // DMARC badge
+    const dmap = { none:'badge-none', quarantine:'badge-quarantine', reject:'badge-reject', missing:'badge-none2' };
+    const dbadge = `<span class="badge ${dmap[r.dmarc.policy]||'badge-none2'}">${r.dmarc.policy||'missing'}</span>`;
+
+    // Live badge
+    const lbadge = r.ping.live
+      ? `<span class="badge badge-live">● LIVE</span>`
+      : `<span class="badge badge-dead">✕ DOWN</span>`;
+
+    // Ping
+    let pingCls = 'ping-slow', pingTxt = '—';
+    if (r.ping.ms !== null) {
+      pingTxt = r.ping.ms + 'ms';
+      pingCls = r.ping.ms < 300 ? 'ping-fast' : r.ping.ms < 800 ? 'ping-med' : 'ping-slow';
+    }
+
+    // MX provider badge
+    const mxmap = { outlook:'badge-outlook', google:'badge-google' };
+    const mxbadge = r.mxProvider && r.mxProvider !== 'none'
+      ? `<span class="badge ${mxmap[r.mxProvider]||'badge-generic'}">${r.mxProvider}</span>`
+      : `<span style="color:var(--muted);font-size:11px">—</span>`;
+
+    // DA bar
+    const da = r.moz.da;
+    const daColor = da >= 50 ? '#10b981' : da >= 30 ? '#f59e0b' : '#ef4444';
+    const daHtml = da !== null
+      ? `<div class="score-bar-wrap"><span class="score-num" style="color:${daColor}">${da}</span><div class="score-bar"><div class="score-fill" style="width:${da}%;background:${daColor}"></div></div></div>`
+      : `<span style="color:var(--muted);font-size:11px">—</span>`;
+    const pa = r.moz.pa !== null ? r.moz.pa : '—';
+    const ss = r.moz.ss !== null ? r.moz.ss : '—';
+
+    // Inbox score dots
+    const n = Math.round(r.inboxScore / 10);
+    const dots = Array.from({length:10},(_,j)=>{
+      const c = j<n ? (n>=7?'#10b981':n>=5?'#f59e0b':'#ef4444') : 'var(--border)';
+      return `<div class="inbox-dot" style="background:${c}"></div>`;
+    }).join('');
+    const inboxColor = r.inboxScore>=70?'#10b981':r.inboxScore>=50?'#f59e0b':'#ef4444';
+    const inboxHtml = `<div class="inbox-meter"><span class="inbox-score-num" style="color:${inboxColor}">${r.inboxScore}</span><div class="inbox-dots">${dots}</div></div>`;
+
+    // Priority
+    const prioHtml = `<span class="priority-cell ${r.priority.cls}">${r.priority.label}</span>`;
+
+    return `<tr id="row-${i}">
+      <td class="rank-cell">${i+1}</td>
+      <td class="domain-cell">${r.domain}</td>
+      <td>${lbadge}</td>
+      <td class="ping-cell ${pingCls}">${pingTxt}</td>
+      <td>${dbadge}</td>
+      <td>${mxbadge}</td>
+      <td class="mx-cell" data-tip="${r.mxHost||'—'}">${r.mxHost||'—'}</td>
+      <td>${daHtml}</td>
+      <td style="font-family:var(--font-mono);font-size:12px">${pa}</td>
+      <td style="font-family:var(--font-mono);font-size:12px;color:${typeof ss==='number'&&ss>30?'var(--bad)':'inherit'}">${ss}</td>
+      <td>${inboxHtml}</td>
+      <td>${prioHtml}</td>
+      <td><button class="sort-btn" onclick="toggleDetail(${i},\`${r.domain}\`)">▾</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleDetail(i, domain) {
+  const existing = document.getElementById(`detail-${i}`);
+  if (existing) { existing.remove(); return; }
+  const r = results[domain];
+  if (!r) return;
+  const mx = r.mxRaw.map(m=>`${m.priority} ${m.host}`).join(' | ') || '—';
+  const detail = document.createElement('tr');
+  detail.id = `detail-${i}`;
+  detail.innerHTML = `<td colspan="13" class=""><div class="detail-row"><td colspan="13">
+    <b style="color:var(--accent)">DMARC Raw:</b> ${r.dmarc.raw||'(no record)'}<br>
+    <b style="color:var(--accent2)">MX Records:</b> ${mx}<br>
+    <b style="color:var(--warn)">MOZ:</b> DA=${r.moz.da||'—'} PA=${r.moz.pa||'—'} SS=${r.moz.ss||'—'} TB=${r.moz.tb||'—'} QB=${r.moz.qb||'—'}<br>
+    <b style="color:var(--good)">Inbox Score Logic:</b> DMARC(${r.dmarc.policy}) + MX(${r.mxProvider}) + Live(${r.ping.live}) + Ping(${r.ping.ms||'—'}ms) + DA(${r.moz.da||0}) = ${r.inboxScore}/100
+  </td></div></td>`;
+  document.getElementById(`row-${i}`).after(detail);
+}
+
+// ============================================================
+// INBOX PICKS
+// ============================================================
+function renderInboxPicks() {
+  const picks = Object.values(results).filter(r=>r.inboxReady).sort((a,b)=>b.inboxScore-a.inboxScore);
+  const el = document.getElementById('inboxPicksContent');
+  if (!picks.length) {
+    el.innerHTML = '<div class="empty-state"><span class="big">🎯</span>No inbox-ready domains found yet.</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div style="margin-bottom:16px;padding:14px;background:rgba(0,255,157,0.04);border:1px solid rgba(0,255,157,0.2);border-radius:10px;font-size:13px;line-height:1.8">
+      <b style="color:var(--accent)">🎯 ${picks.length} Inbox-Ready Domains</b><br>
+      <span style="color:var(--muted);font-size:11px;font-family:var(--font-mono)">Criteria: Live + DMARC(none/quarantine) + Outlook/Google MX + Score ≥ 55</span>
+    </div>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Domain</th><th>MX Provider</th><th>DMARC</th><th>Ping</th><th>Inbox Score</th><th>DA</th></tr></thead>
+      <tbody>${picks.map((r,i)=>`
+        <tr>
+          <td class="rank-cell">${i+1}</td>
+          <td class="domain-cell" style="color:var(--accent)">${r.domain}</td>
+          <td><span class="badge ${r.mxProvider==='outlook'?'badge-outlook':'badge-google'}">${r.mxProvider}</span></td>
+          <td><span class="badge ${r.dmarc.policy==='none'?'badge-none':'badge-quarantine'}">${r.dmarc.policy}</span></td>
+          <td class="ping-cell ping-fast">${r.ping.ms||'—'}ms</td>
+          <td style="font-family:var(--font-mono);font-weight:800;color:var(--good)">${r.inboxScore}/100</td>
+          <td style="font-family:var(--font-mono)">${r.moz.da||'—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+// ============================================================
+// AI SCRAPER (real Anthropic API)
+// ============================================================
+async function aiScrape() {
+  const niche = document.getElementById('aiNiche').value.trim();
+  const count = parseInt(document.getElementById('aiCount').value)||20;
+  if (!niche) { alert('Enter a niche first.'); return; }
+
+  const btn = document.getElementById('aiScrapeBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Scouting...';
+  document.getElementById('aiLog').textContent = '';
+  log(`[AI] Scouting ${count} domains for niche: "${niche}"`, 'info');
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `You are a domain research expert. Generate a list of EXACTLY ${count} REAL, existing domain names that:
+1. Are in the "${niche}" industry/niche
+2. Are likely to have newsletters, email marketing, or bulk-send setups
+3. Could realistically have DMARC=none or quarantine policies (not big tech)
+4. Include a mix of: media blogs, SaaS tools, newsletters, news sites, community sites
+
+Return ONLY a JSON array of domain strings. No explanation. No markdown. No backticks.
+Example: ["domain1.com","domain2.io","domain3.net"]
+
+Make them real, plausible domains — not made-up names.`
+        }]
+      })
+    });
+
+    const data = await resp.json();
+    const text = data.content?.map(c=>c.text||'').join('') || '';
+    log(`[AI] Response received`, 'ok');
+
+    let domains = [];
+    try {
+      const clean = text.replace(/```json|```/g,'').trim();
+      domains = JSON.parse(clean);
+      if (!Array.isArray(domains)) throw new Error('Not array');
+    } catch(e) {
+      const matches = text.match(/"([^"]+\.[a-z]{2,})"/g);
+      if (matches) domains = matches.map(m=>m.replace(/"/g,''));
+    }
+
+    if (!domains.length) {
+      log('[AI] Could not parse domains from response.', 'warn');
+      btn.disabled = false; btn.textContent = '🤖 Scout Domains';
+      return;
+    }
+
+    log(`[AI] Found ${domains.length} domains. Adding to scan queue...`, 'ok');
+    domains.forEach(d => log(`  + ${d}`, ''));
+
+    // Auto-populate and scan
+    document.getElementById('domainInput').value = domains.join('\n');
+    log(`[AI] Starting DNS scan...`, 'info');
+    switchTab('results');
+
+    // Start scan
+    scanning = true;
+    document.getElementById('scanBtn').disabled = true;
+    document.getElementById('progressWrap').style.display = 'block';
+
+    const concurrency = parseInt(document.getElementById('concurrency').value);
+    let done = 0;
+    const queue = [...domains];
+
+    async function runNext() {
+      if (!queue.length) return;
+      const d = queue.shift();
+      try {
+        const row = await scanDomain(d);
+        if (row) { results[row.domain] = row; updateStats(); renderTable(); }
+      } catch(e) {}
+      done++;
+      const pct = Math.round(done/domains.length*100);
+      document.getElementById('progressFill').style.width = pct+'%';
+      document.getElementById('progressPct').textContent = pct+'%';
+      document.getElementById('progressLabel').textContent = `Scanning ${d}...`;
+      await runNext();
+    }
+
+    await Promise.all(Array.from({length:Math.min(concurrency,domains.length)}, runNext));
+    scanning = false;
+    document.getElementById('scanBtn').disabled = false;
+    document.getElementById('scanBtn').textContent = '▶ Scan Domains';
+    document.getElementById('progressLabel').textContent = `✅ AI Scout complete — ${domains.length} domains analyzed.`;
+    log(`[AI] ✅ Scan complete. ${Object.values(results).filter(r=>r.inboxReady).length} inbox-ready found.`, 'ok');
+
+  } catch(e) {
+    log(`[AI] Error: ${e.message}`, 'warn');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🤖 Scout Domains';
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+function exportCSV() {
+  const rows = Object.values(results);
+  const header = ['Domain','Live','PingMS','DMARC_Policy','MX_Provider','MX_Host','DA','PA','SS','TB','QB','Inbox_Score','Priority','Inbox_Ready'];
+  const lines = [header.join(','), ...rows.map(r=>[
+    r.domain, r.ping.live, r.ping.ms||'',r.dmarc.policy,r.mxProvider,r.mxHost,
+    r.moz.da||'',r.moz.pa||'',r.moz.ss||'',r.moz.tb||'',r.moz.qb||'',
+    r.inboxScore, r.priority.label, r.inboxReady
+  ].join(','))];
+  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'inboxradar-results.csv'; a.click();
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(Object.values(results),null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'inboxradar-results.json'; a.click();
+}
+
+function clearResults() {
+  if (!confirm('Clear all results?')) return;
+  results = {};
+  updateStats();
+  renderTable();
+}
+</script>
+</body>
+</html>
