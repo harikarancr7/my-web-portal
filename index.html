@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Project Hub | Dashboard</title>
+    <style>
+        /* ========================================================
+           1. Core Reset & Global Styles
+           ======================================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #121217;
+            --sidebar-color: #0c0c0f;
+            --text-main: #fcfcfc;
+            --text-secondary: #aaaaaf;
+            --primary: #00adb5;
+            --primary-hover: #03cbd4;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --animation-speed: 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* ========================================================
+           2. Animated Sidebar CSS
+           ======================================================== */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100%;
+            background-color: var(--sidebar-color);
+            border-right: 1px solid #1f1f26;
+            display: flex;
+            flex-direction: column;
+            transition: transform var(--animation-speed) ease-in-out;
+            z-index: 1000;
+        }
+
+        /* Sidebar Logo Section */
+        .sidebar-logo {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid #1f1f26;
+        }
+
+        .sidebar-logo h1 {
+            font-size: 1.3rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 800;
+        }
+
+        /* Mobile Close Button */
+        .close-sidebar {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        /* Navigation Links Window */
+        .nav-links {
+            flex: 1;
+            padding: 25px 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Scrollbar styling for navigation window */
+        .nav-links::-webkit-scrollbar {
+            width: 5px;
+        }
+        .nav-links::-webkit-scrollbar-thumb {
+            background-color: #222;
+            border-radius: 10px;
+        }
+
+        /* Nav Header Labels */
+        .nav-header {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: #444;
+            margin: 15px 0 5px 10px;
+            letter-spacing: 2px;
+        }
+
+        /* Core Sidebar Buttons */
+        .menu-btn {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 14px 18px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all var(--animation-speed) ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Button Icon Font settings */
+        .menu-btn i {
+            font-size: 1.2rem;
+            opacity: 0.7;
+        }
+
+        /* Initial animation sequence on load */
+        .nav-links button {
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: fadeInRight 0.4s ease forwards;
+        }
+
+        /* Dynamic Staggered Animations for the 8 sites */
+        .nav-links button:nth-child(2) { animation-delay: 0.1s; }
+        .nav-links button:nth-child(3) { animation-delay: 0.15s; }
+        .nav-links button:nth-child(4) { animation-delay: 0.2s; }
+        .nav-links button:nth-child(5) { animation-delay: 0.25s; }
+        .nav-links button:nth-child(6) { animation-delay: 0.3s; }
+        .nav-links button:nth-child(7) { animation-delay: 0.35s; }
+        .nav-links button:nth-child(8) { animation-delay: 0.4s; }
+        .nav-links button:nth-child(9) { animation-delay: 0.45s; }
+
+        @keyframes fadeInRight {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Hover & Active States with Animation elements */
+        .menu-btn:hover {
+            color: #fff;
+            background-color: #1a1a21;
+        }
+
+        .menu-btn.active {
+            background-color: #1a1a21;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* The Animated Left Indicator Bar */
+        .menu-btn::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 0%;
+            background-color: var(--primary);
+            border-radius: 4px;
+            transition: height var(--animation-speed) ease;
+        }
+
+        .menu-btn:hover::before, .menu-btn.active::before {
+            height: 70%;
+            left: 0;
+        }
+
+        /* ========================================================
+           3. Main Content CSS (Header + Viewport Window)
+           ======================================================== */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Top Header Interface */
+        header {
+            height: var(--header-height);
+            background-color: #121217;
+            border-bottom: 1px solid #1f1f26;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 900;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Mobile Menu Toggle Button */
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        #current-site-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+        }
+
+        .user-profile img {
+            width: 50px;
+            height: 35px;
+            background: #222;
+        }
+
+        /* The Main Viewport Window Context */
+        .viewport-container {
+            flex: 1;
+            position: relative;
+            background-color: #fff;
+            overflow: hidden;
+        }
+
+        /* Iframe configuration overlay component */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity var(--animation-speed) ease;
+        }
+
+        /* Loading Animation Container Components */
+        #loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none; /* Controlled by JS */
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            color: #333;
+            z-index: 10;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @pragma {
+            -webkit-font-smoothing: antialiased;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ========================================================
+           4. Ultimate Responsive System (Mobile First)
+           ======================================================== */
+        @media (max-width: 992px) {
+            :root {
+                --sidebar-width: 250px;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+                box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            }
+
+            .close-sidebar, .mobile-toggle {
+                display: block;
+            }
+
+            header {
+                padding: 0 15px;
+            }
+
+            iframe {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <h1>Website List</h1>
+            <button class="close-sidebar" onclick="toggleSidebar()">×</button>
+        </div>
+        
+        <div class="nav-links">
+            <div class="nav-header">MY SITES</div>
+            
+            <button class="menu-btn active" onclick="switchSite('site1/index.html', 'Dashboard Alpha', this)">
+                <i class="icon">📟</i> Subject_From_Encoder.2.0
+            </button>
+            
+            <button class="menu-btn" onclick="switchSite('site2/index.html', 'E-Commerce Store', this)">
+                <i class="icon">🔧</i> Auto_Content_Editor
+            </button>
+            <button class="menu-btn" onclick="switchSite('site6/index.html', 'Documentation Portal', this)">
+                <i class="icon">📑</i> Domain-Extractor
+            </button>
+            
+            <button class="menu-btn" onclick="switchSite('site7/index.html', 'Booking System', this)">
+                <i class="icon">🔗</i> BULK-MX-CHECKER
+            </button>
+            
+            <button class="menu-btn" onclick="switchSite('site8/index.html', 'Settings Center', this)">
+                <i class="icon">⚙️</i> BULK-DMARC-CHECKER
+            </button>
+            
+            <button class="menu-btn" onclick="switchSite('site3/index.html', 'Creative Portfolio', this)">
+                <i class="icon">🚫</i> Senderscore-extractor
+            </button>
+            
+            <button class="menu-btn" onclick="switchSite('site4/index.html', 'Analytics Engine', this)">
+                <i class="icon">📈</i> Inbox-radar
+            </button>
+            
+            <button class="menu-btn" onclick="switchSite('site5/index.html', 'Social Dashboard', this)">
+                <i class="icon">🌐</i> Subject-From-Encoder.1.0
+            </button>
+            
+        </div>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <div class="header-left">
+                <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+                <div id="current-site-title">Dashboard</div>
+            </div>
+            <div class="user-profile">
+                <span>Welcome, User</span>
+                <img src="https://www.dotnix.com/image/dot.png" alt="Profile">
+            </div>
+        </header>
+
+        <div class="viewport-container">
+            <div id="loader">
+                <div class="spinner"></div>
+                <span>Loading Site...</span>
+            </div>
+            
+            <iframe id="viewport-frame" src="site1/index.html"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const frame = document.getElementById('viewport-frame');
+        const loader = document.getElementById('loader');
+        const titleText = document.getElementById('current-site-title');
+
+        // Function: Switch iframe targets smoothly
+        function switchSite(url, title, button) {
+            loader.style.display = 'flex';
+            frame.style.opacity = '0'; 
+
+            frame.src = url;
+            titleText.innerText = title;
+
+            const buttons = document.querySelectorAll('.menu-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            if (window.innerWidth <= 992) {
+                sidebar.classList.remove('open');
+            }
+        }
+
+        // Function: Handle responsive layout sliders
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+        }
+
+        // Event Listener: Turn off loading mask on frame readiness
+        frame.addEventListener('load', function() {
+            loader.style.display = 'none';
+            frame.style.opacity = '1'; 
+        });
+    </script>
+</body>
+</html>
