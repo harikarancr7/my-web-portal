@@ -7,29 +7,298 @@
 <title>1200+ Unique MIME Subject + From Encoder</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{  --bg:#06070b;  --panel:#11141b;  --panel2:#181c26;  --border:#272d3c;  --accent:#7b61ff;  --text:#f4f6ff;  --muted:#8f97b4;  --green:#29d39f;}*{  margin:0;  padding:0;  box-sizing:border-box;}body{  background:var(--bg);  color:var(--text);  font-family:Inter,sans-serif;}.wrap{  max-width:1900px;  margin:auto;  padding:24px;}.header{  margin-bottom:24px;}.title{  font-size:42px;  font-weight:800;  margin-bottom:8px;}.desc{  color:var(--muted);  font-size:14px;  line-height:1.7;}.layout{  display:grid;  grid-template-columns:340px 1fr;  gap:24px;}.sidebar{  background:var(--panel);  border:1px solid var(--border);  border-radius:24px;  padding:22px;  height:calc(100vh - 80px);  overflow:auto;  position:sticky;  top:24px;}.label{  color:var(--muted);  font-size:12px;  margin-bottom:10px;  font-weight:700;}textarea{  width:100%;  min-height:180px;  resize:vertical;  background:var(--panel2);  border:1px solid var(--border);  border-radius:16px;  padding:14px;  color:white;  outline:none;  font-family:"JetBrains Mono",monospace;  font-size:12px;  line-height:1.7;  margin-bottom:20px;}textarea:focus{  border-color:var(--accent);}.btn{  width:100%;  border:none;  background:var(--accent);  color:white;  font-weight:800;  font-size:15px;  border-radius:16px;  padding:16px;  cursor:pointer;}.btn:hover{  opacity:.92;}.stats{  margin-top:18px;  display:grid;  grid-template-columns:1fr 1fr;  gap:12px;}.stat{  background:var(--panel2);  border:1px solid var(--border);  border-radius:14px;  padding:14px;}.num{  font-size:24px;  font-weight:800;}.txt{  color:var(--muted);  font-size:11px;  margin-top:4px;}.main{  display:flex;  flex-direction:column;  gap:18px;}.toolbar{  background:var(--panel);  border:1px solid var(--border);  border-radius:20px;  padding:16px;  display:flex;  gap:14px;  align-items:center;}.search{  flex:1;  height:50px;  border-radius:14px;  border:1px solid var(--border);  background:var(--panel2);  color:white;  padding:0 16px;  outline:none;  font-family:"JetBrains Mono",monospace;}.copyall{  width:auto;  padding:0 24px;  height:50px;}.grid{  display:grid;  grid-template-columns:repeat(auto-fill,minmax(800px,1fr));  gap:18px;}.card{  background:var(--panel);  border:1px solid var(--border);  border-radius:20px;  overflow:hidden;}.head{  background:var(--panel2);  border-bottom:1px solid var(--border);  padding:14px 18px;  display:flex;  justify-content:space-between;  align-items:center;}.badge{  color:#b7a9ff;  font-size:11px;  font-family:"JetBrains Mono",monospace;}.copy{  background:transparent;  border:1px solid var(--border);  color:white;  width:auto;  padding:8px 12px;  border-radius:10px;  cursor:pointer;  font-size:11px;}.body{  padding:18px;}.row{  display:grid;  grid-template-columns:1fr 1fr;  gap:18px;}.block{  background:#090b10;  border:1px solid var(--border);  border-radius:14px;  padding:14px;}.small{  color:var(--muted);  font-size:11px;  margin-bottom:8px;  text-transform:uppercase;  letter-spacing:.08em;}.code{  font-family:"JetBrains Mono",monospace;  font-size:11px;  line-height:1.8;  word-break:break-all;}.toast{  position:fixed;  right:20px;  bottom:20px;  background:var(--green);  color:black;  padding:14px 18px;  border-radius:12px;  font-weight:800;  opacity:0;  transform:translateY(30px);  transition:.3s;}.toast.show{  opacity:1;  transform:translateY(0);}@media(max-width:1200px){  .layout{    grid-template-columns:1fr;  }  .sidebar{    position:relative;    height:auto;  }  .grid{    grid-template-columns:1fr;  }  .row{    grid-template-columns:1fr;  }}
-</style>
+:root {
+	--bg: #CFF527;
+	--panel: #C3DE3E;
+	--panel2: #F1FFB5;
+	--border: #F1FFB5;
+	--accent: #D6FF12;
+	--text: #111217;
+	--muted: #8f97b4;
+	--green: #29d39f;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	background: var(--bg);
+	color: var(--text);
+	font-family: Inter, sans-serif;
+}
+
+.wrap {
+	max-width: 1900px;
+	margin: auto;
+	padding: 24px;
+}
+
+.header {
+	margin-bottom: 24px;
+}
+
+.title {
+	font-size: 40px;
+	font-weight: 800;
+	margin-bottom: 8px;
+}
+
+.desc {
+	color: var(--muted);
+	font-size: 14px;
+	line-height: 1.7;
+}
+
+.layout {
+	display: grid;
+	grid-template-columns: 340px 1fr;
+	gap: 24px;
+}
+
+.sidebar {
+	background: var(--panel);
+	border: 1px solid var(--border);
+	border-radius: 24px;
+	padding: 22px;
+	height: calc(100vh - 80px);
+	overflow: auto;
+	position: sticky;
+	top: 24px;
+}
+
+.label {
+	color: var(--muted);
+	font-size: 12px;
+	margin-bottom: 10px;
+	font-weight: 700;
+}
+
+textarea {
+	width: 100%;
+	min-height: 180px;
+	resize: vertical;
+	background: var(--panel2);
+	border: 1px solid var(--border);
+	border-radius: 16px;
+	padding: 14px;
+	color: black;
+	outline: none;
+	font-family: "JetBrains Mono", monospace;
+	font-size: 12px;
+	line-height: 1.7;
+	margin-bottom: 20px;
+}
+
+textarea:focus {
+	border-color: var(--accent);
+}
+
+.btn {
+	width: 100%;
+	border: none;
+	background: var(--accent);
+	color: black;
+	font-weight: 800;
+	font-size: 15px;
+	border-radius: 16px;
+	padding: 16px;
+	cursor: pointer;
+}
+
+.btn:hover {
+	opacity: .5;
+
+}
+
+.stats {
+	margin-top: 18px;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+}
+
+.stat {
+	background: var(--panel2);
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	padding: 14px;
+}
+
+.num {
+	font-size: 24px;
+	font-weight: 800;
+}
+
+.txt {
+	color: var(--muted);
+	font-size: 11px;
+	margin-top: 4px;
+}
+
+.main {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+
+.toolbar {
+	background: var(--panel);
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	padding: 16px;
+	display: flex;
+	gap: 14px;
+	align-items: center;
+}
+
+.search {
+	flex: 1;
+	height: 50px;
+	border-radius: 14px;
+	border: 1px solid var(--border);
+	background: var(--panel2);
+	color: white;
+	padding: 0 16px;
+	outline: none;
+	font-family: "JetBrains Mono", monospace;
+}
+
+.copyall {
+	width: auto;
+	padding: 0 24px;
+	height: 50px;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(800px, 1fr));
+	gap: 18px;
+}
+
+.card {
+	background: var(--panel);
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	overflow: hidden;
+}
+
+.head {
+	background: var(--panel2);
+	border-bottom: 1px solid var(--border);
+	padding: 14px 18px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.badge {
+	color: #b7a9ff;
+	font-size: 11px;
+	font-family: "JetBrains Mono", monospace;
+}
+
+.copy {
+	background: transparent;
+	border: 1px solid var(--border);
+	color: black;
+	width: auto;
+	padding: 8px 12px;
+	border-radius: 10px;
+	cursor: pointer;
+	font-size: 11px;
+}
+
+.body {
+	padding: 18px;
+}
+
+.row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 18px;
+}
+
+.block {
+	background: #F1FFB5;
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	padding: 14px;
+}
+
+.small {
+	color: var(--muted);
+	font-size: 11px;
+	margin-bottom: 8px;
+	text-transform: uppercase;
+	letter-spacing: .08em;
+}
+
+.code {
+	font-family: "JetBrains Mono", monospace;
+	font-size: 11px;
+	line-height: 1.8;
+	word-break: break-all;
+}
+
+.toast {
+	position: fixed;
+	right: 20px;
+	bottom: 20px;
+	background: var(--green);
+	color: white;
+	padding: 14px 18px;
+	border-radius: 12px;
+	font-weight: 800;
+	opacity: 0;
+	transform: translateY(30px);
+	transition: .3s;
+}
+
+.toast.show {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+@media(max-width:1200px) {
+	.layout {
+		grid-template-columns: 1fr;
+	}
+
+	.sidebar {
+		position: relative;
+		height: auto;
+	}
+
+	.grid {
+		grid-template-columns: 1fr;
+	}
+
+	.row {
+		grid-template-columns: 1fr;
+	}
+}</style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <div class="title">1200+ Unique MIME Encoder</div>
-    <div class="desc">Generate unique RFC2047 Subject and From encodings with real MIME encoded-word techniques.</div>
+    <div class="title" align="center" style="font-family: Impact, fantasy;">SUBJECT/FROM ENCODER</div>
+    <div class="desc" align="center">Note : Some encoding methods are not working for yahoo mailing. So check and Use it properly.</div>
   </div>
   <div class="layout">
     <div class="sidebar">
-      <div class="label">SUBJECTS</div>
-      <textarea id="subjects">Amazon's Just Extended These Memorial Day Deals
-Important Account Notification
+      <div class="label">ENTER ALL YOUR SUBJECTS: </div>
+      <textarea id="subjects">
 Live Amazon Incredible Spring Deals</textarea>
-      <div class="label">FROM NAMES</div>
+      <div class="label">ENTER ALL YOUR FROM's : </div>
       <textarea id="froms">Deals watchdogs
-Amazon Rewards
-Prime Alerts</textarea>
-      <button class="btn" onclick="generateAll()">Generate 1200+ Encodings</button>
+</textarea>
+      <button class="btn" onclick="generateAll()">Generate 12,000+ Encodings</button>
       <div class="stats">
         <div class="stat"><div class="num" id="count">0</div><div class="txt">UNIQUE PAIRS</div></div>
-        <div class="stat"><div class="num">1200+</div><div class="txt">ENCODING METHODS</div></div>
+        <div class="stat"><div class="num">12,000+</div><div class="txt">ENCODING METHODS</div></div>
       </div>
     </div>
     <div class="main">
